@@ -224,6 +224,49 @@ namespace AuditPilot.Data.Migrations
                     b.ToTable("GoogleDriveItems");
                 });
 
+            modelBuilder.Entity("AuditPilot.Data.UserProjectPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AssignedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("HasAccess")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserProjectPermissions");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -253,25 +296,25 @@ namespace AuditPilot.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "2f420aac-909c-48d1-9480-208b774a99c3",
+                            Id = "53bc211e-2600-4b3b-bc3c-f51597d84c1d",
                             Name = "Partner",
                             NormalizedName = "PARTNER"
                         },
                         new
                         {
-                            Id = "0f9e5035-99eb-403a-8627-60ddf0f8e013",
-                            Name = "Audit Manager",
+                            Id = "f9d0fe2d-56df-49d8-8600-4f963a082966",
+                            Name = "AuditManager",
                             NormalizedName = "AUDITMANAGER"
                         },
                         new
                         {
-                            Id = "472e2b64-146d-47b4-b4e4-235db53e2ea2",
-                            Name = "Tax Manager",
+                            Id = "af1f5a4b-4473-40dd-8514-21a2ec6fd6ac",
+                            Name = "TaxManager",
                             NormalizedName = "TAXMANAGER"
                         },
                         new
                         {
-                            Id = "b341e7b1-ad31-4fa7-8384-e3b8c88f44a4",
+                            Id = "da0a52a2-042f-4840-9d54-15d632a53d48",
                             Name = "User",
                             NormalizedName = "USER"
                         });
@@ -392,6 +435,25 @@ namespace AuditPilot.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Client");
+                });
+
+            modelBuilder.Entity("AuditPilot.Data.UserProjectPermission", b =>
+                {
+                    b.HasOne("AuditPilot.Data.ClientProject", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AuditPilot.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

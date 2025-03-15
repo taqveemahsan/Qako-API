@@ -13,5 +13,6 @@ namespace AuditPilot.Repositories.Interfaces
         Task<Client> GetByIdAsync(Guid id);
         Task<IEnumerable<Client>> GetAllAsync();
         Task DeleteAsync(Client client);
+
     }
 }

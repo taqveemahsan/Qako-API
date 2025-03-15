@@ -9,6 +9,7 @@ namespace AuthPilot.Models
 {
     public class ClientProjectdto
     {
+        public Guid Id { get; set; }
         public string ProjectName { get; set; }
         public Guid ClientId { get; set; }
         public string GoogleDriveFolderId { get; set; }

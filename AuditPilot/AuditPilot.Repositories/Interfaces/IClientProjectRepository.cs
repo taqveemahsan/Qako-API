@@ -16,5 +16,10 @@ namespace AuditPilot.Repositories.Interfaces
         Task DeleteAsync(Guid projectId);
 
         Task<List<ClientProject>> GetClientsProjectAsync(Guid clientId);
+        Task AddPermissionAsync(UserProjectPermission permission);
+        Task UpdatePermissionAsync(UserProjectPermission permission);
+        Task DeletePermissionAsync(Guid permissionId);
+        Task<List<UserProjectPermission>> GetPermissionsByUserIdAsync(string userId);
+        Task<List<UserProjectPermission>> GetPermissionsByProjectIdAsync(Guid projectId);
     }
 }

@@ -40,7 +40,14 @@ namespace AuditPilot.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<ClientProject>> GetClientsProjectAsync(Guid clientId)
+        {
+            return await _context.ClientProjects
+                .Where(cp => cp.ClientId == clientId)
+                .ToListAsync();
+        }
 
-        // Implement other CRUD operations as needed
+        
+
     }
 }

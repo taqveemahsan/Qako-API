@@ -60,5 +60,42 @@ namespace AuditPilot.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task AddPermissionAsync(UserProjectPermission permission)
+        {
+            await _context.UserProjectPermissions.AddAsync(permission);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdatePermissionAsync(UserProjectPermission permission)
+        {
+            _context.UserProjectPermissions.Update(permission);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeletePermissionAsync(Guid permissionId)
+        {
+            var permission = await _context.UserProjectPermissions.FindAsync(permissionId);
+            if (permission != null)
+            {
+                _context.UserProjectPermissions.Remove(permission);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<List<UserProjectPermission>> GetPermissionsByUserIdAsync(string userId)
+        {
+            return await _context.UserProjectPermissions
+                .Where(p => p.UserId == userId)
+                .ToListAsync();
+        }
+
+        public async Task<List<UserProjectPermission>> GetPermissionsByProjectIdAsync(Guid projectId)
+        {
+            return await _context.UserProjectPermissions
+                .Where(p => p.ProjectId == projectId)
+                .Include(p => p.User) // User details ke liye optional
+                .ToListAsync();
+        }
     }
 }

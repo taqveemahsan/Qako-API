@@ -76,9 +76,8 @@ namespace AuditPilot.API.Controllers
             }
         }
 
-
         [HttpPost("create-folder")]
-        public async Task<IActionResult> CreateFolder([FromForm] string folderName, [FromForm] Guid clientId,string parentFolderId , [FromForm] int purpose)
+        public async Task<IActionResult> CreateFolder([FromForm] string folderName, [FromForm] string parentFolderId)
         {
             if (string.IsNullOrEmpty(folderName))
                 return BadRequest("Folder name is required.");
@@ -99,8 +98,8 @@ namespace AuditPilot.API.Controllers
                     FileName = createdFolder.Name,
                     GoogleId = createdFolder.Id,
                     IsFolder = true,
-                    CreatedOn = DateTime.UtcNow, 
-                    CreatedBy = userId /* Retrieve the user ID from the context or token */,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatedBy = userId,
                     IsActive = true
                 };
 

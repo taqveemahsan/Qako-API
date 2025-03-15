@@ -34,7 +34,7 @@ builder.Services.AddSingleton(provider =>
     UserCredential credential;
 
     // Load credentials from the downloaded credentials.json file
-    var credentialsPath = "D:\\Taqi\\secret.json";
+    var credentialsPath = "C:\\google\\secret.json";
     using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
     {
         string credPath = "token.json";

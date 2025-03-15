@@ -2,6 +2,7 @@
 using AuthPilot.Models.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -75,6 +76,29 @@ namespace AuditPilot.API.Controllers
                 });
             }
             return Unauthorized();
+        }
+
+        [HttpGet("users")]
+        public async Task<IActionResult> GetUsers()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            var userList = new List<object>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                userList.Add(new
+                {
+                    user.Id,
+                    user.FirstName,
+                    user.LastName,
+                    user.UserName,
+                    user.Email,
+                    RoleName = roles.FirstOrDefault() ?? "None"
+                });
+            }
+
+            return Ok(userList);
         }
     }
 }
