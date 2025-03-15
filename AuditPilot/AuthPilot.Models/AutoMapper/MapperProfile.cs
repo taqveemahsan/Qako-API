@@ -33,8 +33,8 @@ namespace AuthPilot.Models.AutoMapper
                 .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))
                 .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate));
 
-            // New mappings for UserProjectPermission and UserProjectPermissionDto
             CreateMap<UserProjectPermission, UserProjectPermissionDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.ProjectId))
                 .ForMember(dest => dest.HasAccess, opt => opt.MapFrom(src => src.HasAccess));

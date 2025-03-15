@@ -39,8 +39,8 @@ namespace AuditPilot.Data
             var roles = new List<IdentityRole>
             {
                 new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "Partner", NormalizedName = "PARTNER" },
-                new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "AuditManager", NormalizedName = "AUDITMANAGER" }, // Space hata diya
-                new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "TaxManager", NormalizedName = "TAXMANAGER" },   // Space hata diya
+                new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "AuditManager", NormalizedName = "AUDITMANAGER" },
+                new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "TaxManager", NormalizedName = "TAXMANAGER" },
                 new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "User", NormalizedName = "USER" }
             };
 

@@ -30,7 +30,7 @@ namespace AuditPilot.API.Controllers
             GoogleDriveHelper googleDriveHelper,
             IMapper mapper,
             IConfiguration configuration,
-            UserManager<ApplicationUser> userManager) // Dependency injection
+            UserManager<ApplicationUser> userManager) 
         {
             _clientRepository = clientRepository;
             _clientProjectRepository = clientProjectRepository;
@@ -146,10 +146,9 @@ namespace AuditPilot.API.Controllers
                         filteredProjects = clientProjects.Where(p => p.ProjectType == (int)ProjectType.Audit);
                         break;
                     case "Partner":
-                        filteredProjects = clientProjects; // Partner ko saare projects
+                        filteredProjects = clientProjects;
                         break;
                     case "User":
-                        // User role ke liye permission check
                         var permissions = await _clientProjectRepository.GetPermissionsByUserIdAsync(userId);
                         var allowedProjectIds = permissions.Where(p => p.HasAccess).Select(p => p.ProjectId);
                         filteredProjects = clientProjects.Where(p => allowedProjectIds.Contains(p.Id));
@@ -166,55 +165,9 @@ namespace AuditPilot.API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-        //[HttpGet("{clientId}/projectsbyType")]
-        //public async Task<IActionResult> GetProjectsByClientIdAndType(Guid clientId)
-        //{
-        //    if (clientId == Guid.Empty)
-        //        return BadRequest("Invalid Client ID.");
-
-        //    try
-        //    {
-        //        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        //        var user = await _userManager.FindByIdAsync(userId);
-        //        if (user == null)
-        //            return Unauthorized("User not found.");
-
-        //        var roles = await _userManager.GetRolesAsync(user);
-        //        var userRole = roles.FirstOrDefault(); 
-
-
-        //        var clientProjects = await _clientProjectRepository.GetClientsProjectAsync(clientId);
-
-        //        IEnumerable<ClientProject> filteredProjects;
-        //        switch (userRole)
-        //        {
-        //            case "Tax Manager":
-        //                filteredProjects = clientProjects.Where(p => p.ProjectType == (int)ProjectType.Tax);
-        //                break;
-        //            case "Audit Manager":
-        //                filteredProjects = clientProjects.Where(p => p.ProjectType == (int)ProjectType.Audit);
-        //                break;
-        //            case "Partner":
-        //                filteredProjects = clientProjects;
-        //                break;
-        //            case "User":
-        //                filteredProjects = clientProjects;
-        //                break;
-        //            default:
-        //                return Forbid("User role not authorized to view projects.");
-        //        }
-
-        //        var clientProjectDtos = _mapper.Map<List<ClientProjectdto>>(filteredProjects);
-        //        return Ok(clientProjectDtos);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, $"Internal server error: {ex.Message}");
-        //    }
-        //}
-
+        
         [HttpPost("project/permission/add")]
-        [Authorize(Roles = "Partner")] // Sirf Partner permission add kar sakta hai
+        [Authorize(Roles = "Partner")] 
         public async Task<IActionResult> AddProjectPermission([FromBody] UserProjectPermissionDto permissionDto)
         {
             if (permissionDto == null || string.IsNullOrEmpty(permissionDto.UserId) || permissionDto.ProjectId == Guid.Empty)
