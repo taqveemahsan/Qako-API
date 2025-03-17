@@ -30,7 +30,7 @@ namespace AuditPilot.API.Controllers
         [HttpPost("upload-file")]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] string ParentFolderId)
         {
-            if (file == null || file.Length == 0)
+            if (file == null)
                 return BadRequest("No file uploaded.");
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -129,7 +129,9 @@ namespace AuditPilot.API.Controllers
                     item.Id,
                     item.Name,
                     item.MimeType,
-                    ThumbnailLink = item.IconLink
+                    ThumbnailLink = item.IconLink,
+                    item.Size,
+                    item.FileExtension
                 });
             }
 
