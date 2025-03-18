@@ -79,11 +79,47 @@ namespace AuditPilot.API.Controllers
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> GetUsers(string search = "", int pageNumber = 1, int pageSize = 10, string role = null)
         {
-            var users = await _userManager.Users.ToListAsync();
-            var userList = new List<object>();
+            var query = _userManager.Users.AsQueryable();
 
+            // Search filter
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                query = query.Where(u => u.FirstName.ToLower().Contains(search) ||
+                                        u.LastName.ToLower().Contains(search) ||
+                                        u.UserName.ToLower().Contains(search) ||
+                                        u.Email.ToLower().Contains(search));
+            }
+
+            // Fetch users first (apply search filter on DB side)
+            var users = await query
+                .OrderBy(u => u.UserName)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Apply role filter client-side
+            if (!string.IsNullOrEmpty(role))
+            {
+                users = users.Where(u => _userManager.GetRolesAsync(u).Result.Contains(role)).ToList();
+            }
+
+            // Total count (without role filter for simplicity)
+            var totalUsersQuery = _userManager.Users.AsQueryable();
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                totalUsersQuery = totalUsersQuery.Where(u => u.FirstName.ToLower().Contains(search) ||
+                                                            u.LastName.ToLower().Contains(search) ||
+                                                            u.UserName.ToLower().Contains(search) ||
+                                                            u.Email.ToLower().Contains(search));
+            }
+            var totalUsers = await totalUsersQuery.CountAsync();
+
+            // Prepare response
+            var userList = new List<object>();
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
@@ -98,7 +134,88 @@ namespace AuditPilot.API.Controllers
                 });
             }
 
-            return Ok(userList);
+            return Ok(new
+            {
+                TotalUsers = totalUsers,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Users = userList
+            });
         }
+        //[HttpGet("users")]
+        //public async Task<IActionResult> GetUsers(string search = "", int pageNumber = 1, int pageSize = 10)
+        //{
+        //    // Base query with pagination
+        //    var query = _userManager.Users.AsQueryable();
+
+        //    // Search filter
+        //    if (!string.IsNullOrEmpty(search))
+        //    {
+        //        search = search.ToLower();
+        //        query = query.Where(u => u.FirstName.ToLower().Contains(search) ||
+        //                                u.LastName.ToLower().Contains(search) ||
+        //                                u.UserName.ToLower().Contains(search) ||
+        //                                u.Email.ToLower().Contains(search));
+        //    }
+
+        //    // Total count
+        //    var totalUsers = await query.CountAsync();
+
+        //    // Fetch users with pagination
+        //    var users = await query
+        //        .OrderBy(u => u.UserName)
+        //        .Skip((pageNumber - 1) * pageSize)
+        //        .Take(pageSize)
+        //        .ToListAsync();
+
+        //    // Fetch roles for the selected users only
+        //    var userList = new List<object>();
+        //    foreach (var user in users)
+        //    {
+        //        var roles = await _userManager.GetRolesAsync(user);
+        //        userList.Add(new
+        //        {
+        //            user.Id,
+        //            user.FirstName,
+        //            user.LastName,
+        //            user.UserName,
+        //            user.Email,
+        //            RoleName = roles.FirstOrDefault() ?? "None"
+        //        });
+        //    }
+
+        //    return Ok(new
+        //    {
+        //        TotalUsers = totalUsers,
+        //        PageNumber = pageNumber,
+        //        PageSize = pageSize,
+        //        Users = userList
+        //    });
+        //}
+
+        //[HttpGet("users")]
+        //public async Task<IActionResult> GetUsers()
+        //{
+        //    var users = await _userManager.Users.ToListAsync();
+        //    var userList = new List<object>();
+
+        //    foreach (var user in users)
+        //    {
+        //        var roles = await _userManager.GetRolesAsync(user);
+        //        userList.Add(new
+        //        {
+        //            user.Id,
+        //            user.FirstName,
+        //            user.LastName,
+        //            user.UserName,
+        //            user.Email,
+        //            RoleName = roles.FirstOrDefault() ?? "None"
+        //        });
+        //    }
+
+        //    return Ok(userList);
+        //}
     }
 }
+//dotnet ef migrations add addDate --context AuditPilot.Data.ApplicationDbContext --startup-project .\WebApplication1\ --project .\AuditPilot.Data\
+//dotnet ef database update --context AuditPilot.Data.ApplicationDbContext --startup-project .\WebApplication1\ --project .\AuditPilot.Data\

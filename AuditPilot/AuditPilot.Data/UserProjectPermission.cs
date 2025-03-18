@@ -13,6 +13,7 @@ namespace AuditPilot.Data
         public Guid ProjectId { get; set; }
         public bool HasAccess { get; set; }
         public DateTime AssignedOn { get; set; }
+        public DateTime ExpiredOn { get; set; }
 
         public ApplicationUser User { get; set; }
         public ClientProject Project { get; set; }

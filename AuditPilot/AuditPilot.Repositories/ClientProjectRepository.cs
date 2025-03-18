@@ -86,7 +86,7 @@ namespace AuditPilot.Repositories
         public async Task<List<UserProjectPermission>> GetPermissionsByUserIdAsync(string userId)
         {
             return await _context.UserProjectPermissions
-                .Where(p => p.UserId == userId)
+                .Where(p => p.UserId == userId && p.ExpiredOn > DateTime.UtcNow)
                 .ToListAsync();
         }
 

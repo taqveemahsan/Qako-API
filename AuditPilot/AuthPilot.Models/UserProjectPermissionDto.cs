@@ -12,5 +12,6 @@ namespace AuthPilot.Models
         public string UserId { get; set; }
         public Guid ProjectId { get; set; }
         public bool HasAccess { get; set; }
+        public DateTime ExpiredOn { get; set; }
     }
 }

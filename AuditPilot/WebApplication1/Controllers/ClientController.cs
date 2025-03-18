@@ -178,7 +178,8 @@ namespace AuditPilot.API.Controllers
                 UserId = permissionDto.UserId,
                 ProjectId = permissionDto.ProjectId,
                 HasAccess = permissionDto.HasAccess,
-                AssignedOn = DateTime.UtcNow
+                AssignedOn = DateTime.UtcNow,
+                ExpiredOn = permissionDto.ExpiredOn
             };
 
             await _clientProjectRepository.AddPermissionAsync(permission);
@@ -195,6 +196,8 @@ namespace AuditPilot.API.Controllers
                 return NotFound("Permission not found.");
 
             existingPermission.HasAccess = permissionDto.HasAccess;
+            existingPermission.ExpiredOn = permissionDto.ExpiredOn;
+
             await _clientProjectRepository.UpdatePermissionAsync(existingPermission);
             return Ok(new { Message = "Permission updated successfully." });
         }
