@@ -34,6 +34,34 @@ namespace AuditPilot.Repositories
             return await _context.Clients.Where(x=>x.IsActive).ToListAsync();
         }
 
+        public async Task<IEnumerable<Client>> GetAllAsync(string search, int page, int pageSize)
+        {
+            var query = _context.Clients.Where(x => x.IsActive);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Name.Contains(search) || x.Email.Contains(search) || x.Phone.Contains(search));
+            }
+
+            return await query
+                .OrderBy(x => x.Name) // Optional: Add sorting
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetTotalCountAsync(string search)
+        {
+            var query = _context.Clients.Where(x => x.IsActive);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x => x.Name.Contains(search) || x.Email.Contains(search) || x.Phone.Contains(search));
+            }
+
+            return await query.CountAsync();
+        }
+
         public async Task DeleteAsync(Client client)
         {
             _context.Clients.Remove(client);

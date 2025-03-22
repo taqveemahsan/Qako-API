@@ -55,24 +55,56 @@ namespace AuditPilot.API.Controllers
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllClients()
+        public async Task<IActionResult> GetAllClients([FromQuery] string? search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var id = SessionHelper.GetCurrentUserId()!.Value;
-            var clients = await _clientRepository.GetAllAsync();
+            var id = SessionHelper.GetCurrentUserId()!.Value; // Assuming this is still needed
+            var clients = await _clientRepository.GetAllAsync(search, page, pageSize);
             var clientDtos = _mapper.Map<IEnumerable<ClientDto>>(clients);
-            return Ok(clientDtos);
+            var totalClients = await _clientRepository.GetTotalCountAsync(search); // For pagination metadata
+            var response = new
+            {
+                Clients = clientDtos,
+                TotalCount = totalClients,
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling((double)totalClients / pageSize)
+            };
+            return Ok(response);
         }
 
-        [HttpDelete("delete/{id}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClient(Guid id)
         {
+            //var userId = SessionHelper.GetCurrentUserId()!.Value;
             var client = await _clientRepository.GetByIdAsync(id);
             if (client == null)
-                return NotFound("Client not found.");
+            {
+                return NotFound(new { Message = "Client not found." });
+            }
 
             await _clientRepository.DeleteAsync(client);
             return Ok(new { Message = "Client deleted successfully." });
         }
+
+        //[HttpGet("all")]
+        //public async Task<IActionResult> GetAllClients()
+        //{
+        //    var id = SessionHelper.GetCurrentUserId()!.Value;
+        //    var clients = await _clientRepository.GetAllAsync();
+        //    var clientDtos = _mapper.Map<IEnumerable<ClientDto>>(clients);
+        //    return Ok(clientDtos);
+        //}
+
+        //[HttpDelete("delete/{id}")]
+        //public async Task<IActionResult> DeleteClient(Guid id)
+        //{
+        //    var client = await _clientRepository.GetByIdAsync(id);
+        //    if (client == null)
+        //        return NotFound("Client not found.");
+
+        //    await _clientRepository.DeleteAsync(client);
+        //    return Ok(new { Message = "Client deleted successfully." });
+        //}
 
         [HttpPost("create-project")]
         public async Task<IActionResult> CreateClientProject([FromBody] ClientProjectdto projectDto)
