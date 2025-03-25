@@ -25,20 +25,66 @@ namespace AuditPilot.API.Controllers
             _roleManager = roleManager;
         }
 
+        //[HttpPost("register")]
+        //public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        //{
+        //    var user = new ApplicationUser { UserName = model.Username, Email = model.Email , FirstName = model.FirstName, LastName = model.LastName };
+        //    var result = await _userManager.CreateAsync(user, model.Password);
+
+        //    if (result.Succeeded)
+        //    {
+        //        var aa = await _userManager.AddToRoleAsync(user, model.RoleName);
+
+        //        return Ok(new { message = "User registered successfully!" });
+        //    }
+
+        //    return BadRequest(result.Errors);
+        //}
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            var user = new ApplicationUser { UserName = model.Username, Email = model.Email , FirstName = model.FirstName, LastName = model.LastName };
+            // Validate the model
+            if (model == null || string.IsNullOrEmpty(model.Username) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
+            {
+                return BadRequest("Invalid registration data.");
+            }
+
+            // Validate roles
+            if (model.RoleNames == null || !model.RoleNames.Any())
+            {
+                return BadRequest("At least one role must be specified.");
+            }
+
+            // Create the user
+            var user = new ApplicationUser
+            {
+                UserName = model.Username,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName
+            };
+
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
-                var aa = await _userManager.AddToRoleAsync(user, model.RoleName);
+                // Assign multiple roles to the user
+                var roleResult = await _userManager.AddToRolesAsync(user, model.RoleNames);
 
-                return Ok(new { message = "User registered successfully!" });
+                if (roleResult.Succeeded)
+                {
+                    return Ok(new { message = "User registered successfully with roles!" });
+                }
+                else
+                {
+                    // If role assignment fails, you might want to delete the user or handle the error
+                    await _userManager.DeleteAsync(user); // Optional: Rollback user creation
+                    return BadRequest(new { message = "User created but failed to assign roles.", errors = roleResult.Errors });
+                }
             }
 
-            return BadRequest(result.Errors);
+            return BadRequest(new { message = "User registration failed.", errors = result.Errors });
         }
 
         [HttpPost("login")]
@@ -103,7 +149,7 @@ namespace AuditPilot.API.Controllers
             // Apply role filter client-side
             if (!string.IsNullOrEmpty(role))
             {
-                users = users.Where(u => _userManager.GetRolesAsync(u).Result.Contains(role)).ToList();
+                users = users.Where(u => _userManager.GetRolesAsync(u).Result.Contains(role, StringComparer.OrdinalIgnoreCase)).ToList();
             }
 
             // Total count (without role filter for simplicity)
@@ -130,7 +176,7 @@ namespace AuditPilot.API.Controllers
                     user.LastName,
                     user.UserName,
                     user.Email,
-                    RoleName = roles.FirstOrDefault() ?? "None"
+                    RoleNames = roles.ToList() // Changed from RoleName to RoleNames, returning the full list
                 });
             }
 

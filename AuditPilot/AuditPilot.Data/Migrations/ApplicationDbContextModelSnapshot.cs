@@ -188,6 +188,51 @@ namespace AuditPilot.Data.Migrations
                     b.ToTable("ClientProjects");
                 });
 
+            modelBuilder.Entity("AuditPilot.Data.FolderStructure", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("FolderName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("GoogleDriveFolderId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ParentFolderId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FolderStructures");
+                });
+
             modelBuilder.Entity("AuditPilot.Data.GoogleDriveItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -299,25 +344,25 @@ namespace AuditPilot.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "30e8503d-8b95-412f-a81d-e2c943d3ec9a",
+                            Id = "81e0411d-43bb-48c4-98ed-35dfbe410ecf",
                             Name = "Partner",
                             NormalizedName = "PARTNER"
                         },
                         new
                         {
-                            Id = "d7bf7bef-3806-4e07-8680-62446744c204",
+                            Id = "1c339032-c0bc-435e-9131-a24b51f7a98e",
                             Name = "AuditManager",
                             NormalizedName = "AUDITMANAGER"
                         },
                         new
                         {
-                            Id = "6809fecc-ff67-41d9-8b85-5e68b507a1ba",
+                            Id = "f98043c7-3c59-45a8-a761-a4a1d3ef31aa",
                             Name = "TaxManager",
                             NormalizedName = "TAXMANAGER"
                         },
                         new
                         {
-                            Id = "bb34e678-bebe-427c-93fb-74eaa374d91a",
+                            Id = "344cc4e5-8632-42cf-a0d7-c91406393741",
                             Name = "User",
                             NormalizedName = "USER"
                         });

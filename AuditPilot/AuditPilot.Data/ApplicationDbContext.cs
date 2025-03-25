@@ -19,6 +19,7 @@ namespace AuditPilot.Data
         public DbSet<GoogleDriveItem> GoogleDriveItems { get; set; }
         public DbSet<ClientProject> ClientProjects { get; set; }
         public DbSet<UserProjectPermission> UserProjectPermissions { get; set; }
+        public DbSet<FolderStructure> FolderStructures { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -65,6 +66,27 @@ namespace AuditPilot.Data
                       .WithMany()
                       .HasForeignKey(p => p.ProjectId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure FolderStructure entity
+            builder.Entity<FolderStructure>(entity =>
+            {
+                entity.Property(e => e.FolderName)
+                    .IsRequired()
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.ParentFolderId)
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.GoogleDriveFolderId)
+                    .IsRequired()
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.CreatedOn)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
             });
         }
     }

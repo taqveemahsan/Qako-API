@@ -23,9 +23,11 @@ namespace AuditPilot.API.Controllers
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IFolderStructureRepository _folderStructureRepository;
 
         public ClientController(
             IClientRepository clientRepository,
+            IFolderStructureRepository folderStructureRepository,
             IClientProjectRepository clientProjectRepository,
             GoogleDriveHelper googleDriveHelper,
             IMapper mapper,
@@ -38,6 +40,7 @@ namespace AuditPilot.API.Controllers
             _mapper = mapper;
             _configuration = configuration;
             _userManager = userManager;
+            _folderStructureRepository = folderStructureRepository;
         }
         [HttpPost("register")]
         public async Task<IActionResult> RegisterClient([FromBody] ClientDto clientDto)
@@ -255,23 +258,53 @@ namespace AuditPilot.API.Controllers
             var permissionDtos = _mapper.Map<List<UserProjectPermissionDto>>(permissions);
             return Ok(permissionDtos);
         }
-
         private async Task<string> EnsureFolderStructureAsync(string rootFolderName, string projectTypeFolderName, string clientName)
         {
-            // Check if the root folder exists; if not, create it
-            var rootFolder = await _googleDriveHelper.GetOrCreateFolderAsync(rootFolderName, _configuration["RootFolderId"]);
+            string rootFolderId = await _folderStructureRepository.GetFolderIdAsync(rootFolderName, null);
+            if (string.IsNullOrEmpty(rootFolderId))
+            {
+                var rootFolder = await _googleDriveHelper.GetOrCreateFolderAsync(rootFolderName, _configuration["RootFolderId"]);
+                rootFolderId = rootFolder.Id;
 
-            // Check if the project type folder exists within the root; if not, create it
-            var clientFolder = await _googleDriveHelper.GetOrCreateFolderAsync(clientName, rootFolder.Id);
+                await _folderStructureRepository.AddFolderAsync(rootFolderName, null, rootFolderId);
+            }
 
-            // Check if the client folder exists within the project type folder; if not, create it
-            var projectTypeFolder = await _googleDriveHelper.GetOrCreateFolderAsync(projectTypeFolderName, clientFolder.Id);
-          
-            return projectTypeFolder.Id;
+            string clientFolderId = await _folderStructureRepository.GetFolderIdAsync(clientName, rootFolderId);
+            if (string.IsNullOrEmpty(clientFolderId))
+            {
+                var clientFolder = await _googleDriveHelper.GetOrCreateFolderAsync(clientName, rootFolderId);
+                clientFolderId = clientFolder.Id;
+
+                await _folderStructureRepository.AddFolderAsync(clientName, rootFolderId, clientFolderId);
+            }
+
+            string projectTypeFolderId = await _folderStructureRepository.GetFolderIdAsync(projectTypeFolderName, clientFolderId);
+            if (string.IsNullOrEmpty(projectTypeFolderId))
+            {
+                var projectTypeFolder = await _googleDriveHelper.GetOrCreateFolderAsync(projectTypeFolderName, clientFolderId);
+                projectTypeFolderId = projectTypeFolder.Id;
+
+                await _folderStructureRepository.AddFolderAsync(projectTypeFolderName, clientFolderId, projectTypeFolderId);
+            }
+
+            return projectTypeFolderId;
         }
     }
-}
 
+    //private async Task<string> EnsureFolderStructureAsync(string rootFolderName, string projectTypeFolderName, string clientName)
+    //{
+    //    // Check if the root folder exists; if not, create it
+    //    var rootFolder = await _googleDriveHelper.GetOrCreateFolderAsync(rootFolderName, _configuration["RootFolderId"]);
+
+    //    // Check if the project type folder exists within the root; if not, create it
+    //    var clientFolder = await _googleDriveHelper.GetOrCreateFolderAsync(clientName, rootFolder.Id);
+
+    //    // Check if the client folder exists within the project type folder; if not, create it
+    //    var projectTypeFolder = await _googleDriveHelper.GetOrCreateFolderAsync(projectTypeFolderName, clientFolder.Id);
+
+    //    return projectTypeFolder.Id;
+    //}
+}
 
 
 

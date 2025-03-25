@@ -62,6 +62,7 @@ builder.Services.AddSingleton<GoogleDriveHelper>();
 builder.Services.AddScoped<IGoogleDriveItemRepository,GoogleDriveItemRepository>();
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IClientProjectRepository, ClientProjectRepository>();
+builder.Services.AddScoped<IFolderStructureRepository, FolderStructureRepository>();
 
 
 
