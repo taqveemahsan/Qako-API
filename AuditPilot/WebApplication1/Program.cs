@@ -31,22 +31,56 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 builder.Services.AddSingleton(provider =>
 {
 
+    //UserCredential credential;
+
+    //// Load credentials from the downloaded credentials.json file
+    //var credentialsPath = "C:\\google\\secret.json";
+    ////var credentialsPath = "D:\\Taqi\\secret.json";
+    //using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
+    //{
+    //    string credPath = "token.json";
+    //    credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+    //        GoogleClientSecrets.FromStream(stream).Secrets,
+    //        new List<string>() { DriveService.Scope.Drive },
+    //        "user",
+    //        CancellationToken.None,
+    //        new FileDataStore(credPath, true)).Result;
+
+    //    Console.WriteLine("Credential file saved to: " + credPath);
+    //}
+
     UserCredential credential;
 
-    // Load credentials from the downloaded credentials.json file
-    var credentialsPath = "C:\\google\\secret.json";
-    //var credentialsPath = "D:\\Taqi\\secret.json";
-    using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
-    {
-        string credPath = "token.json";
-        credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-            GoogleClientSecrets.FromStream(stream).Secrets,
-            new List<string>() { DriveService.Scope.Drive },
-            "user",
-            CancellationToken.None,
-            new FileDataStore(credPath, true)).Result;
+    var credentialsPath = "C:\\google\\secret.json"; // Client secrets file
+    var tokenPath = "C:\\google\\Google.Apis.Auth.OAuth2.Responses.TokenResponse-user";        // Single token file path
 
-        Console.WriteLine("Credential file saved to: " + credPath);
+    // Agar token.json pehle se exist karta hai, toh usko load karo
+    if (File.Exists(tokenPath))
+    {
+        using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
+        {
+            credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                GoogleClientSecrets.FromStream(stream).Secrets,
+                new List<string> { DriveService.Scope.Drive },
+                "user",
+                CancellationToken.None,
+                new FileDataStore(Path.GetDirectoryName(tokenPath), false)).Result;
+        }
+        Console.WriteLine("Loaded existing credential from: " + tokenPath);
+    }
+    else
+    {
+        // Naya token generate karo aur save karo
+        using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
+        {
+            credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                GoogleClientSecrets.FromStream(stream).Secrets,
+                new List<string> { DriveService.Scope.Drive },
+                "user",
+                CancellationToken.None,
+                new FileDataStore(Path.GetDirectoryName(tokenPath), false)).Result;
+        }
+        Console.WriteLine("New credential file saved to: " + tokenPath);
     }
 
     var service = new DriveService(new BaseClientService.Initializer()

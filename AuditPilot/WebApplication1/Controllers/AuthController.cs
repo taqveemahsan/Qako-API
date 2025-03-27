@@ -24,23 +24,6 @@ namespace AuditPilot.API.Controllers
             _configuration = configuration;
             _roleManager = roleManager;
         }
-
-        //[HttpPost("register")]
-        //public async Task<IActionResult> Register([FromBody] RegisterModel model)
-        //{
-        //    var user = new ApplicationUser { UserName = model.Username, Email = model.Email , FirstName = model.FirstName, LastName = model.LastName };
-        //    var result = await _userManager.CreateAsync(user, model.Password);
-
-        //    if (result.Succeeded)
-        //    {
-        //        var aa = await _userManager.AddToRoleAsync(user, model.RoleName);
-
-        //        return Ok(new { message = "User registered successfully!" });
-        //    }
-
-        //    return BadRequest(result.Errors);
-        //}
-
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {

@@ -42,6 +42,11 @@ namespace AuditPilot.Data
                 new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "Partner", NormalizedName = "PARTNER" },
                 new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "AuditManager", NormalizedName = "AUDITMANAGER" },
                 new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "TaxManager", NormalizedName = "TAXMANAGER" },
+                new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "CorporateManager", NormalizedName = "CORPORATEMANAGER" },
+                new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "AdvisoryManager", NormalizedName = "ADVISORYMANAGER" },
+                new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "ERPManager", NormalizedName = "ERPMANAGER" },
+                new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "BookkeepingManager", NormalizedName = "BOOKKEEPINGMANAGER" },
+                new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "OtherManager", NormalizedName = "OTHERMANAGER" },
                 new IdentityRole { Id = Guid.NewGuid().ToString(), Name = "User", NormalizedName = "USER" }
             };
 

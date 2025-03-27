@@ -344,25 +344,55 @@ namespace AuditPilot.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "81e0411d-43bb-48c4-98ed-35dfbe410ecf",
+                            Id = "e8639162-34f9-414d-8bcd-b06d0b681a09",
                             Name = "Partner",
                             NormalizedName = "PARTNER"
                         },
                         new
                         {
-                            Id = "1c339032-c0bc-435e-9131-a24b51f7a98e",
+                            Id = "5b57a1e1-9365-4c3b-9a63-035446fdca61",
                             Name = "AuditManager",
                             NormalizedName = "AUDITMANAGER"
                         },
                         new
                         {
-                            Id = "f98043c7-3c59-45a8-a761-a4a1d3ef31aa",
+                            Id = "c9d8b089-cbb1-4f77-8cee-4a7e5a89aca9",
                             Name = "TaxManager",
                             NormalizedName = "TAXMANAGER"
                         },
                         new
                         {
-                            Id = "344cc4e5-8632-42cf-a0d7-c91406393741",
+                            Id = "7970cc28-7801-4272-a31c-8f689bbd865d",
+                            Name = "CorporateManager",
+                            NormalizedName = "CORPORATEMANAGER"
+                        },
+                        new
+                        {
+                            Id = "bddda9f7-ed42-4b24-965c-50f8d6c3e153",
+                            Name = "AdvisoryManager",
+                            NormalizedName = "ADVISORYMANAGER"
+                        },
+                        new
+                        {
+                            Id = "f1468545-bb5c-437b-b9d4-8d74966703b6",
+                            Name = "ERPManager",
+                            NormalizedName = "ERPMANAGER"
+                        },
+                        new
+                        {
+                            Id = "c50f54ac-7f83-442e-8580-88a7bc8d9d95",
+                            Name = "BookkeepingManager",
+                            NormalizedName = "BOOKKEEPINGMANAGER"
+                        },
+                        new
+                        {
+                            Id = "1d05377f-cb73-4ce5-a5f2-b37a117e0ae9",
+                            Name = "OtherManager",
+                            NormalizedName = "OTHERMANAGER"
+                        },
+                        new
+                        {
+                            Id = "7d13ae1f-cc16-43d6-8ca6-ffb4f0db8946",
                             Name = "User",
                             NormalizedName = "USER"
                         });

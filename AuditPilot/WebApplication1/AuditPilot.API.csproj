@@ -27,4 +27,8 @@
     <ProjectReference Include="..\AuthPilot.Models\AuthPilot.Models.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="token.json\" />
+  </ItemGroup>
+
 </Project>

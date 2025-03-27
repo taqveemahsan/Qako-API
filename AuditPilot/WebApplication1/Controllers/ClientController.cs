@@ -60,10 +60,10 @@ namespace AuditPilot.API.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAllClients([FromQuery] string? search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var id = SessionHelper.GetCurrentUserId()!.Value; // Assuming this is still needed
+            var id = SessionHelper.GetCurrentUserId()!.Value;
             var clients = await _clientRepository.GetAllAsync(search, page, pageSize);
             var clientDtos = _mapper.Map<IEnumerable<ClientDto>>(clients);
-            var totalClients = await _clientRepository.GetTotalCountAsync(search); // For pagination metadata
+            var totalClients = await _clientRepository.GetTotalCountAsync(search);
             var response = new
             {
                 Clients = clientDtos,
