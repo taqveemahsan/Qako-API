@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AuditPilot.Data.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,5 +11,7 @@ namespace AuditPilot.Repositories.Interfaces
     {
         Task<string> GetFolderIdAsync(string folderName, string parentFolderId);
         Task AddFolderAsync(string folderName, string parentFolderId, string googleDriveFolderId);
+        Task<List<FolderStructureDto>> GetFolderStructureListAsync(string search = "", int page = 1, int pageSize = 10);
+        Task<int> GetFolderStructureCountAsync(string search = "");
     }
 }

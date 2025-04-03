@@ -52,6 +52,7 @@ builder.Services.AddSingleton(provider =>
     UserCredential credential;
 
     var credentialsPath = "C:\\google\\secret.json"; // Client secrets file
+    //var tokenPath = "C:\\google\\Google.Apis.Auth.OAuth2.Responses.TokenResponse-user";        // Single token file path
     var tokenPath = "C:\\google\\Google.Apis.Auth.OAuth2.Responses.TokenResponse-user";        // Single token file path
 
     // Agar token.json pehle se exist karta hai, toh usko load karo
