@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
+using static System.Net.WebRequestMethods;
 
 namespace AuditPilot.Data
 {
@@ -20,6 +21,7 @@ namespace AuditPilot.Data
         public DbSet<ClientProject> ClientProjects { get; set; }
         public DbSet<UserProjectPermission> UserProjectPermissions { get; set; }
         public DbSet<FolderStructure> FolderStructures { get; set; }
+        public DbSet<AccountConfirmations> AccountConfirmations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -92,6 +94,17 @@ namespace AuditPilot.Data
 
                 entity.Property(e => e.IsActive)
                     .HasDefaultValue(true);
+            });
+
+            builder.Entity<AccountConfirmations>(entity =>
+            {
+                entity.Property(e => e.CreatedOn)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
+
+                entity.HasIndex(o => o.Email);
             });
         }
     }

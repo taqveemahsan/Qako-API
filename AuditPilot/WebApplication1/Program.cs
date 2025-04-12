@@ -30,34 +30,55 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 
 builder.Services.AddSingleton(provider =>
 {
-    UserCredential credential;
+    var credentialsPath = "C:\\google\\taqiproject-155860a26586.json";
 
-    // Path to your client secret
-    var credentialsPath = "C:\\google\\secret.json";
-
-    // Folder where tokens will be stored (not a file path)
-    var tokenFolderPath = "C:\\google\\tokens";
-
+    GoogleCredential credential;
     using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
     {
-        credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-            GoogleClientSecrets.FromStream(stream).Secrets,
-            new[] { DriveService.Scope.Drive },
-            "user",
-            CancellationToken.None,
-            new FileDataStore(tokenFolderPath, true)).Result;
+        credential = GoogleCredential.FromStream(stream)
+            .CreateScoped(DriveService.Scope.Drive);
     }
-
-    Console.WriteLine("Google Drive token saved to folder: " + tokenFolderPath);
 
     var service = new DriveService(new BaseClientService.Initializer()
     {
         HttpClientInitializer = credential,
-        ApplicationName = "DesktopClient1",
+        ApplicationName = "DesktopClient1"
     });
 
     return service;
 });
+
+
+//builder.Services.AddSingleton(provider =>
+//{
+//    UserCredential credential;
+
+//    // Path to your client secret
+//    var credentialsPath = "C:\\google\\secret.json";
+
+//    // Folder where tokens will be stored (not a file path)
+//    var tokenFolderPath = "C:\\google\\tokens";
+
+//    using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
+//    {
+//        credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+//            GoogleClientSecrets.FromStream(stream).Secrets,
+//            new[] { DriveService.Scope.Drive },
+//            "user",
+//            CancellationToken.None,
+//            new FileDataStore(tokenFolderPath, true)).Result;
+//    }
+
+//    Console.WriteLine("Google Drive token saved to folder: " + tokenFolderPath);
+
+//    var service = new DriveService(new BaseClientService.Initializer()
+//    {
+//        HttpClientInitializer = credential,
+//        ApplicationName = "DesktopClient1",
+//    });
+
+//    return service;
+//});
 
 //builder.Services.AddSingleton(provider =>
 //{

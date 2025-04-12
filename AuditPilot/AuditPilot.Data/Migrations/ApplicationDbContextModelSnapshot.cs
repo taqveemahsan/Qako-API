@@ -22,6 +22,57 @@ namespace AuditPilot.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("AuditPilot.Data.AccountConfirmations", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email");
+
+                    b.ToTable("AccountConfirmations");
+                });
+
             modelBuilder.Entity("AuditPilot.Data.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -344,55 +395,55 @@ namespace AuditPilot.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "e8639162-34f9-414d-8bcd-b06d0b681a09",
+                            Id = "138de465-d866-4232-8050-cd81d8811659",
                             Name = "Partner",
                             NormalizedName = "PARTNER"
                         },
                         new
                         {
-                            Id = "5b57a1e1-9365-4c3b-9a63-035446fdca61",
+                            Id = "23b9bc42-50af-4ab9-aae0-d1a19de6ba08",
                             Name = "AuditManager",
                             NormalizedName = "AUDITMANAGER"
                         },
                         new
                         {
-                            Id = "c9d8b089-cbb1-4f77-8cee-4a7e5a89aca9",
+                            Id = "ad0c0b53-cac5-4906-894b-54b6e85af872",
                             Name = "TaxManager",
                             NormalizedName = "TAXMANAGER"
                         },
                         new
                         {
-                            Id = "7970cc28-7801-4272-a31c-8f689bbd865d",
+                            Id = "1eb66f4c-0b97-4a3c-aa67-e060505d7b14",
                             Name = "CorporateManager",
                             NormalizedName = "CORPORATEMANAGER"
                         },
                         new
                         {
-                            Id = "bddda9f7-ed42-4b24-965c-50f8d6c3e153",
+                            Id = "8c093595-c3e3-45db-bf54-dd2cbf9585d7",
                             Name = "AdvisoryManager",
                             NormalizedName = "ADVISORYMANAGER"
                         },
                         new
                         {
-                            Id = "f1468545-bb5c-437b-b9d4-8d74966703b6",
+                            Id = "51eefc44-27fd-4445-8676-24164ced866e",
                             Name = "ERPManager",
                             NormalizedName = "ERPMANAGER"
                         },
                         new
                         {
-                            Id = "c50f54ac-7f83-442e-8580-88a7bc8d9d95",
+                            Id = "e36cc4f7-330c-4dc8-b473-0a9abc5c30ea",
                             Name = "BookkeepingManager",
                             NormalizedName = "BOOKKEEPINGMANAGER"
                         },
                         new
                         {
-                            Id = "1d05377f-cb73-4ce5-a5f2-b37a117e0ae9",
+                            Id = "c3d56f94-0186-4b65-a9f1-9a9d0d13d75b",
                             Name = "OtherManager",
                             NormalizedName = "OTHERMANAGER"
                         },
                         new
                         {
-                            Id = "7d13ae1f-cc16-43d6-8ca6-ffb4f0db8946",
+                            Id = "da2258f2-5441-4874-911e-85180e3f1a26",
                             Name = "User",
                             NormalizedName = "USER"
                         });
