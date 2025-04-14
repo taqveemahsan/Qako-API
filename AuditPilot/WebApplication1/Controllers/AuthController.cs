@@ -386,7 +386,7 @@ namespace AuditPilot.API.Controllers
             }
         }
 
-        public async Task<bool> EmailAsync(string ToName, string ToEmail, string body)
+        private async Task<bool> EmailAsync(string ToName, string ToEmail, string body)
         {
             try
             {
@@ -414,7 +414,7 @@ namespace AuditPilot.API.Controllers
             }
         }
 
-        public async Task<bool> SendEmail(MailMessage Body)
+        private async Task<bool> SendEmail(MailMessage Body)
         {
             try
             {
