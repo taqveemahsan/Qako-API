@@ -38,43 +38,123 @@ namespace AuditPilot.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            if (model == null || string.IsNullOrEmpty(model.Username) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
+            try
             {
-                return BadRequest("Invalid registration data.");
-            }
-
-            if (model.RoleNames == null || !model.RoleNames.Any())
-            {
-                return BadRequest("At least one role must be specified.");
-            }
-
-            var user = new ApplicationUser
-            {
-                UserName = model.Username,
-                Email = model.Email,
-                FirstName = model.FirstName,
-                LastName = model.LastName
-            };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (result.Succeeded)
-            {
-                var roleResult = await _userManager.AddToRolesAsync(user, model.RoleNames);
-
-                if (roleResult.Succeeded)
+                if (model == null || string.IsNullOrEmpty(model.Username) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
                 {
-                    return Ok(new { message = "User registered successfully with roles!" });
+                    return BadRequest("Invalid registration data.");
                 }
-                else
-                {
-                    await _userManager.DeleteAsync(user);
-                    return BadRequest(new { message = "User created but failed to assign roles.", errors = roleResult.Errors });
-                }
-            }
 
-            return BadRequest(new { message = "User registration failed.", errors = result.Errors });
+                if (model.RoleNames == null || !model.RoleNames.Any())
+                {
+                    return BadRequest("At least one role must be specified.");
+                }
+
+                var existingUserByUsername = await _userManager.FindByNameAsync(model.Username);
+                if (existingUserByUsername != null)
+                {
+                    return BadRequest(new { message = "Username is already taken." });
+                }
+
+                var existingUserByEmail = await _userManager.FindByEmailAsync(model.Email);
+                if (existingUserByEmail != null)
+                {
+                    return BadRequest(new { message = "Email is already registered." });
+                }
+
+                var user = new ApplicationUser
+                {
+                    UserName = model.Username,
+                    Email = model.Email,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (result.Succeeded)
+                {
+                    var cleanedRoles = model.RoleNames
+                        .Where(role => !string.IsNullOrWhiteSpace(role))
+                        .Select(role => role.Replace(" ", "").ToUpper())
+                        .Distinct()
+                        .ToList();
+
+                    var roleResult = await _userManager.AddToRolesAsync(user, cleanedRoles);
+
+                    if (roleResult.Succeeded)
+                    {
+                        return Ok(new { message = "User registered successfully with roles!" });
+                    }
+                    else
+                    {
+                        await _userManager.DeleteAsync(user);
+                        return BadRequest(new { message = "User created but failed to assign roles.", errors = roleResult.Errors });
+                    }
+                }
+
+                return BadRequest(new { message = "User registration failed.", errors = result.Errors });
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
+
+        //public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        //{
+        //    try
+        //    {
+        //        if (model == null || string.IsNullOrEmpty(model.Username) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
+        //        {
+        //            return BadRequest("Invalid registration data.");
+        //        }
+
+        //        if (model.RoleNames == null || !model.RoleNames.Any())
+        //        {
+        //            return BadRequest("At least one role must be specified.");
+        //        }
+
+        //        var user = new ApplicationUser
+        //        {
+        //            UserName = model.Username,
+        //            Email = model.Email,
+        //            FirstName = model.FirstName,
+        //            LastName = model.LastName
+        //        };
+
+        //        var result = await _userManager.CreateAsync(user, model.Password);
+
+        //        if (result.Succeeded)
+        //        {
+        //            var cleanedRoles = model.RoleNames
+        //                .Where(role => !string.IsNullOrWhiteSpace(role))
+        //                .Select(role => role.Replace(" ", "").ToUpper()) // remove all spaces & convert to uppercase
+        //                .Distinct()
+        //                .ToList();
+
+        //            var roleResult = await _userManager.AddToRolesAsync(user, cleanedRoles);
+
+        //            //var roleResult = await _userManager.AddToRolesAsync(user, model.RoleNames);
+
+        //            if (roleResult.Succeeded)
+        //            {
+        //                return Ok(new { message = "User registered successfully with roles!" });
+        //            }
+        //            else
+        //            {
+        //                await _userManager.DeleteAsync(user);
+        //                return BadRequest(new { message = "User created but failed to assign roles.", errors = roleResult.Errors });
+        //            }
+        //        }
+
+        //        return BadRequest(new { message = "User registration failed.", errors = result.Errors });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw;
+        //    }
+        //}
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)

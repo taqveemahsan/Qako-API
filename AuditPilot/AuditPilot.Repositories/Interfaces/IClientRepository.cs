@@ -11,6 +11,7 @@ namespace AuditPilot.Repositories.Interfaces
     {
         Task AddAsync(Client client);
         Task<Client> GetByIdAsync(Guid id);
+        Task<Client> GetByNameAsync(string name);
         Task<IEnumerable<Client>> GetAllAsync();
         Task DeleteAsync(Client client);
         Task<IEnumerable<Client>> GetAllAsync(string search, int page, int pageSize);

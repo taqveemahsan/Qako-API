@@ -14,6 +14,10 @@ namespace AuthPilot.Models.Enums
     public enum ProjectType
     {
         Tax = 1,
-        Audit = 2
+        Audit = 2,
+        Corporate = 3,
+        Advisory = 4,
+        ERP = 5,
+        Bookkeeping = 6
     }
 }

@@ -32,7 +32,7 @@ namespace AuditPilot.API.Controllers
             GoogleDriveHelper googleDriveHelper,
             IMapper mapper,
             IConfiguration configuration,
-            UserManager<ApplicationUser> userManager) 
+            UserManager<ApplicationUser> userManager)
         {
             _clientRepository = clientRepository;
             _clientProjectRepository = clientProjectRepository;
@@ -42,8 +42,10 @@ namespace AuditPilot.API.Controllers
             _userManager = userManager;
             _folderStructureRepository = folderStructureRepository;
         }
-        [HttpPost("register")]
-        public async Task<IActionResult> RegisterClient([FromBody] ClientDto clientDto)
+
+
+        [HttpPost("registerV1")]
+        public async Task<IActionResult> RegisterClientV1([FromBody] ClientDto clientDto)
         {
             if (clientDto == null || string.IsNullOrEmpty(clientDto.Name))
                 return BadRequest("Invalid client data.");
@@ -54,8 +56,194 @@ namespace AuditPilot.API.Controllers
             client.IsActive = true;
 
             await _clientRepository.AddAsync(client);
+
+            List<string> projectType = new List<string>()
+            {
+                "Tax",
+                "Audit",
+                "Corporate",
+                "Advisory",
+                "ERP",
+                "Bookkeeping"
+            };
+            // Create Projects
+            foreach (var type in projectType)
+            {
+                string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLable ? "PrivateLabel" : "PublicLabel";
+                string projectTypeFolderName = type;
+
+                string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, projectTypeFolderName, client.Name);
+                var projectFolder = await _googleDriveHelper.CreateFolderAsync(type, clientFolderId);
+
+                ClientProjectdto projectDto = new ClientProjectdto()
+                {
+                    ClientId = client.Id,
+                    StartDate = DateTime.UtcNow,
+                    EndDate = DateTime.UtcNow.AddYears(2),
+                    ProjectName = type,
+                    ProjectType = type == ProjectType.Corporate.ToString() ? ProjectType.Tax : ProjectType.Audit,
+                    GoogleDriveFolderId = ""
+                };
+
+                var clientProject = _mapper.Map<ClientProject>(projectDto);
+                clientProject.GoogleDriveFolderId = projectFolder.Id;
+                clientProject.CreatedOn = DateTime.UtcNow;
+                clientProject.CreatedBy = SessionHelper.GetCurrentUserId()!.Value;
+                clientProject.IsActive = true;
+
+                await _clientProjectRepository.AddAsync(clientProject);
+            }
+
             return Ok(new { ClientId = client.Id });
         }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> RegisterClient([FromBody] ClientDto clientDto)
+        {
+            try
+            {
+                if (clientDto == null || string.IsNullOrEmpty(clientDto.Name))
+                {
+                    return BadRequest("Invalid client data.");
+                }
+
+                var userId = SessionHelper.GetCurrentUserId();
+                if (!userId.HasValue)
+                {
+                    return Unauthorized("User not authenticated.");
+                }
+
+                // ✅ Duplicate client name check (case-insensitive)
+                var existingClient = await _clientRepository.GetByNameAsync(clientDto.Name.Trim());
+                if (existingClient != null)
+                {
+                    return BadRequest(new { message = "A client with this name already exists." });
+                }
+
+                var client = _mapper.Map<Client>(clientDto);
+                client.CreatedOn = DateTime.UtcNow;
+                client.CreatedBy = userId.Value;
+                client.IsActive = true;
+
+                await _clientRepository.AddAsync(client);
+
+                var projectTypes = Enum.GetValues(typeof(ProjectType)).Cast<ProjectType>().ToList();
+
+                foreach (var type in projectTypes)
+                {
+                    try
+                    {
+                        string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLable
+                            ? "PrivateLabel"
+                            : "PublicLabel";
+                        string projectTypeFolderName = type.ToString();
+
+                        string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, projectTypeFolderName, client.Name);
+                        var projectFolder = await _googleDriveHelper.CreateFolderAsync(type.ToString(), clientFolderId);
+
+                        var projectDto = new ClientProjectdto
+                        {
+                            ClientId = client.Id,
+                            StartDate = DateTime.UtcNow,
+                            EndDate = DateTime.UtcNow.AddYears(2),
+                            ProjectName = type.ToString(),
+                            ProjectType = type,
+                            GoogleDriveFolderId = projectFolder.Id
+                        };
+
+                        var clientProject = _mapper.Map<ClientProject>(projectDto);
+                        clientProject.CreatedOn = DateTime.UtcNow;
+                        clientProject.CreatedBy = userId.Value;
+                        clientProject.IsActive = true;
+
+                        await _clientProjectRepository.AddAsync(clientProject);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error creating project {type}: {ex.Message}");
+                        continue;
+                    }
+                }
+
+                return Ok(new { ClientId = client.Id });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in RegisterClient: {ex.Message}");
+                return StatusCode(500, "An error occurred while registering the client.");
+            }
+        }
+
+        //public async Task<IActionResult> RegisterClient([FromBody] ClientDto clientDto)
+        //{
+        //    try
+        //    {
+        //        if (clientDto == null || string.IsNullOrEmpty(clientDto.Name))
+        //        {
+        //            return BadRequest("Invalid client data.");
+        //        }
+
+        //        var userId = SessionHelper.GetCurrentUserId();
+        //        if (!userId.HasValue)
+        //        {
+        //            return Unauthorized("User not authenticated.");
+        //        }
+
+        //        var client = _mapper.Map<Client>(clientDto);
+        //        client.CreatedOn = DateTime.UtcNow;
+        //        client.CreatedBy = userId.Value;
+        //        client.IsActive = true;
+
+        //        await _clientRepository.AddAsync(client);
+
+        //        var projectTypes = Enum.GetValues(typeof(ProjectType)).Cast<ProjectType>().ToList();
+
+        //        foreach (var type in projectTypes)
+        //        {
+        //            try
+        //            {
+        //                string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLable
+        //                    ? "PrivateLabel"
+        //                    : "PublicLabel";
+        //                string projectTypeFolderName = type.ToString();
+
+        //                string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, projectTypeFolderName, client.Name);
+        //                var projectFolder = await _googleDriveHelper.CreateFolderAsync(type.ToString(), clientFolderId);
+
+        //                var projectDto = new ClientProjectdto
+        //                {
+        //                    ClientId = client.Id,
+        //                    StartDate = DateTime.UtcNow,
+        //                    EndDate = DateTime.UtcNow.AddYears(2),
+        //                    ProjectName = type.ToString(),
+        //                    ProjectType = type,
+        //                    GoogleDriveFolderId = projectFolder.Id
+        //                };
+
+        //                // Map and save project
+        //                var clientProject = _mapper.Map<ClientProject>(projectDto);
+        //                clientProject.CreatedOn = DateTime.UtcNow;
+        //                clientProject.CreatedBy = userId.Value;
+        //                clientProject.IsActive = true;
+
+        //                await _clientProjectRepository.AddAsync(clientProject);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                Console.WriteLine($"Error creating project {type}: {ex.Message}");
+        //                continue;
+        //            }
+        //        }
+
+        //        return Ok(new { ClientId = client.Id });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Log the error (use your logger)
+        //        Console.WriteLine($"Error in RegisterClient: {ex.Message}");
+        //        return StatusCode(500, "An error occurred while registering the client.");
+        //    }
+        //}
 
         [HttpGet("all")]
         public async Task<IActionResult> GetAllClients([FromQuery] string? search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -200,9 +388,9 @@ namespace AuditPilot.API.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-        
+
         [HttpPost("project/permission/add")]
-        [Authorize(Roles = "Partner")] 
+        [Authorize(Roles = "Partner")]
         public async Task<IActionResult> AddProjectPermission([FromBody] UserProjectPermissionDto permissionDto)
         {
             if (permissionDto == null || string.IsNullOrEmpty(permissionDto.UserId) || permissionDto.ProjectId == Guid.Empty)
