@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.AspNetCore.Identity; // UserManager ke liye
-using System.Security.Claims; // ClaimsPrincipal ke liye
+using System.Security.Claims;
 
 namespace AuditPilot.API.Controllers
 {
