@@ -174,76 +174,6 @@ namespace AuditPilot.API.Controllers
             }
         }
 
-        //public async Task<IActionResult> RegisterClient([FromBody] ClientDto clientDto)
-        //{
-        //    try
-        //    {
-        //        if (clientDto == null || string.IsNullOrEmpty(clientDto.Name))
-        //        {
-        //            return BadRequest("Invalid client data.");
-        //        }
-
-        //        var userId = SessionHelper.GetCurrentUserId();
-        //        if (!userId.HasValue)
-        //        {
-        //            return Unauthorized("User not authenticated.");
-        //        }
-
-        //        var client = _mapper.Map<Client>(clientDto);
-        //        client.CreatedOn = DateTime.UtcNow;
-        //        client.CreatedBy = userId.Value;
-        //        client.IsActive = true;
-
-        //        await _clientRepository.AddAsync(client);
-
-        //        var projectTypes = Enum.GetValues(typeof(ProjectType)).Cast<ProjectType>().ToList();
-
-        //        foreach (var type in projectTypes)
-        //        {
-        //            try
-        //            {
-        //                string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLable
-        //                    ? "PrivateLabel"
-        //                    : "PublicLabel";
-        //                string projectTypeFolderName = type.ToString();
-
-        //                string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, projectTypeFolderName, client.Name);
-        //                var projectFolder = await _googleDriveHelper.CreateFolderAsync(type.ToString(), clientFolderId);
-
-        //                var projectDto = new ClientProjectdto
-        //                {
-        //                    ClientId = client.Id,
-        //                    StartDate = DateTime.UtcNow,
-        //                    EndDate = DateTime.UtcNow.AddYears(2),
-        //                    ProjectName = type.ToString(),
-        //                    ProjectType = type,
-        //                    GoogleDriveFolderId = projectFolder.Id
-        //                };
-
-        //                // Map and save project
-        //                var clientProject = _mapper.Map<ClientProject>(projectDto);
-        //                clientProject.CreatedOn = DateTime.UtcNow;
-        //                clientProject.CreatedBy = userId.Value;
-        //                clientProject.IsActive = true;
-
-        //                await _clientProjectRepository.AddAsync(clientProject);
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                Console.WriteLine($"Error creating project {type}: {ex.Message}");
-        //                continue;
-        //            }
-        //        }
-
-        //        return Ok(new { ClientId = client.Id });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Log the error (use your logger)
-        //        Console.WriteLine($"Error in RegisterClient: {ex.Message}");
-        //        return StatusCode(500, "An error occurred while registering the client.");
-        //    }
-        //}
 
         [HttpGet("all")]
         public async Task<IActionResult> GetAllClients([FromQuery] string? search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -276,26 +206,6 @@ namespace AuditPilot.API.Controllers
             await _clientRepository.DeleteAsync(client);
             return Ok(new { Message = "Client deleted successfully." });
         }
-
-        //[HttpGet("all")]
-        //public async Task<IActionResult> GetAllClients()
-        //{
-        //    var id = SessionHelper.GetCurrentUserId()!.Value;
-        //    var clients = await _clientRepository.GetAllAsync();
-        //    var clientDtos = _mapper.Map<IEnumerable<ClientDto>>(clients);
-        //    return Ok(clientDtos);
-        //}
-
-        //[HttpDelete("delete/{id}")]
-        //public async Task<IActionResult> DeleteClient(Guid id)
-        //{
-        //    var client = await _clientRepository.GetByIdAsync(id);
-        //    if (client == null)
-        //        return NotFound("Client not found.");
-
-        //    await _clientRepository.DeleteAsync(client);
-        //    return Ok(new { Message = "Client deleted successfully." });
-        //}
 
         [HttpPost("create-project")]
         public async Task<IActionResult> CreateClientProject([FromBody] ClientProjectdto projectDto)
@@ -477,6 +387,43 @@ namespace AuditPilot.API.Controllers
 
             return projectTypeFolderId;
         }
+        [HttpPut]
+        public async Task<IActionResult> UpdateClient([FromBody] ClientDto clientDto)
+        {
+            try
+            {
+                if (clientDto == null || clientDto.Id == Guid.Empty || string.IsNullOrEmpty(clientDto.Name))
+                {
+                    return BadRequest("Invalid client data.");
+                }
+
+                var existingClient = await _clientRepository.GetByIdAsync(clientDto.Id);
+                if (existingClient == null)
+                {
+                    return NotFound("Client not found.");
+                }
+
+                // Check for duplicate name (excluding the current client)
+                var duplicateClient = await _clientRepository.GetByNameAsync(clientDto.Name.Trim());
+                if (duplicateClient != null && duplicateClient.Id != clientDto.Id)
+                {
+                    return BadRequest(new { message = "A client with this name already exists." });
+                }
+
+                // Update the client fields
+                existingClient.Name = clientDto.Name;
+                //existingClient.CompanyType = clientDto.CompanyType;
+                //existingClient.Updat = DateTime.UtcNow;
+                //existingClient.UpdatedBy = SessionHelper.GetCurrentUserId()!.Value;
+
+                await _clientRepository.UpdateAsync(existingClient);
+                return Ok(new { Message = "Client updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Failed to update client: {ex.Message}");
+            }
+        }
 
         [HttpGet("folder-structure")]
         public async Task<IActionResult> GetFolderStructureList([FromQuery] string? search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -503,20 +450,4 @@ namespace AuditPilot.API.Controllers
             }
         }
     }
-
-
-
-    //private async Task<string> EnsureFolderStructureAsync(string rootFolderName, string projectTypeFolderName, string clientName)
-    //{
-    //    // Check if the root folder exists; if not, create it
-    //    var rootFolder = await _googleDriveHelper.GetOrCreateFolderAsync(rootFolderName, _configuration["RootFolderId"]);
-
-    //    // Check if the project type folder exists within the root; if not, create it
-    //    var clientFolder = await _googleDriveHelper.GetOrCreateFolderAsync(clientName, rootFolder.Id);
-
-    //    // Check if the client folder exists within the project type folder; if not, create it
-    //    var projectTypeFolder = await _googleDriveHelper.GetOrCreateFolderAsync(projectTypeFolderName, clientFolder.Id);
-
-    //    return projectTypeFolder.Id;
-    //}
 }

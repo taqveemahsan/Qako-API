@@ -29,7 +29,11 @@ namespace AuditPilot.Repositories
             return await _context.Clients
                 .FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower());
         }
-
+        public async Task UpdateAsync(Client client)
+        {
+            _context.Clients.Update(client);
+            await _context.SaveChangesAsync();
+        }
 
         public async Task<Client> GetByIdAsync(Guid id)
         {
