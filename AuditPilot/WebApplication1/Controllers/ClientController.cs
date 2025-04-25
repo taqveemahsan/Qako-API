@@ -69,7 +69,9 @@ namespace AuditPilot.API.Controllers
             // Create Projects
             foreach (var type in projectType)
             {
-                string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLable ? "PrivateLabel" : "PublicLabel";
+                //string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLable ? "PrivateLabel" : "PublicLabel";
+                string rootFolderName = Enum.GetName(typeof(CompanyType), client.CompanyType) ?? "Unknown";
+
                 string projectTypeFolderName = type;
 
                 string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, projectTypeFolderName, client.Name);
@@ -387,7 +389,8 @@ namespace AuditPilot.API.Controllers
 
             return projectTypeFolderId;
         }
-        [HttpPut]
+
+        [HttpPost("updateClient")]
         public async Task<IActionResult> UpdateClient([FromBody] ClientDto clientDto)
         {
             try
@@ -412,7 +415,7 @@ namespace AuditPilot.API.Controllers
 
                 // Update the client fields
                 existingClient.Name = clientDto.Name;
-                //existingClient.CompanyType = clientDto.CompanyType;
+                existingClient.CompanyType = (int)clientDto.CompanyType <= 0 ? (int)CompanyType.Others: (int)clientDto.CompanyType;
                 //existingClient.Updat = DateTime.UtcNow;
                 //existingClient.UpdatedBy = SessionHelper.GetCurrentUserId()!.Value;
 
