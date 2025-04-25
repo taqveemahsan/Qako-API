@@ -22,6 +22,9 @@ namespace AuthPilot.Models.AutoMapper
            .ForMember(dest => dest.IsActive, opt => opt.Ignore())
            .ForMember(dest => dest.CompanyType, opt => opt.MapFrom(src => (int)src.CompanyType));
 
+            CreateMap<Client, ClientDtoViewModel>()
+                .ForMember(dest => dest.CompanyType, opt => opt.MapFrom(src => (CompanyType)src.CompanyType));
+
             CreateMap<Client, ClientDto>()
                 .ForMember(dest => dest.CompanyType, opt => opt.MapFrom(src => (CompanyType)src.CompanyType));
 

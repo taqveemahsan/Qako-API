@@ -176,13 +176,26 @@ namespace AuditPilot.API.Controllers
             }
         }
 
-
         [HttpGet("all")]
         public async Task<IActionResult> GetAllClients([FromQuery] string? search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             var id = SessionHelper.GetCurrentUserId()!.Value;
             var clients = await _clientRepository.GetAllAsync(search, page, pageSize);
-            var clientDtos = _mapper.Map<IEnumerable<ClientDto>>(clients);
+            var clientDtos = _mapper.Map<IEnumerable<ClientDtoViewModel>>(clients);
+
+            foreach (var clientDto in clientDtos)
+            {
+                if (clientDto.CreatedBy != Guid.Empty)
+                {
+                    var user = await _userManager.FindByIdAsync(clientDto.CreatedBy.ToString());
+                    clientDto.CreatedByUserName = user?.UserName ?? "Unknown"; 
+                }
+                else
+                {
+                    clientDto.CreatedByUserName = "Unknown";
+                }
+            }
+
             var totalClients = await _clientRepository.GetTotalCountAsync(search);
             var response = new
             {
@@ -194,6 +207,23 @@ namespace AuditPilot.API.Controllers
             };
             return Ok(response);
         }
+        //[HttpGet("all")]
+        //public async Task<IActionResult> GetAllClients([FromQuery] string? search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        //{
+        //    var id = SessionHelper.GetCurrentUserId()!.Value;
+        //    var clients = await _clientRepository.GetAllAsync(search, page, pageSize);
+        //    var clientDtos = _mapper.Map<IEnumerable<ClientDtoViewModel>>(clients);
+        //    var totalClients = await _clientRepository.GetTotalCountAsync(search);
+        //    var response = new
+        //    {
+        //        Clients = clientDtos,
+        //        TotalCount = totalClients,
+        //        CurrentPage = page,
+        //        PageSize = pageSize,
+        //        TotalPages = (int)Math.Ceiling((double)totalClients / pageSize)
+        //    };
+        //    return Ok(response);
+        //}
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClient(Guid id)

@@ -16,4 +16,20 @@ namespace AuthPilot.Models
         public string Phone { get; set; }
         public string Address { get; set; }
     }
+
+    public class ClientDtoViewModel
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public CompanyType CompanyType { get; set; }
+        public string Email { get; set; }
+        public string Phone { get; set; }
+        public string Address { get; set; }
+        public DateTime CreatedOn { get; set; }
+        public string CreatedByUserName { get; set; }
+        public Guid CreatedBy { get; set; }
+        public Guid ModifiedBy { get; set; }
+        public DateTime ModifiedOn { get; set; }
+        public bool IsActive { get; set; }
+    }
 }
