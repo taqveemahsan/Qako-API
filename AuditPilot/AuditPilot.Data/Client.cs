@@ -13,5 +13,6 @@ namespace AuditPilot.Data
         public string Phone { get; set; }
         public string Address { get; set; }
         public int CompanyType { get; set; }
+        public string GoogleDriveId { get; set; } = "";
     }
 }

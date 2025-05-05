@@ -55,6 +55,11 @@ namespace AuditPilot.API.Controllers
             client.CreatedBy = SessionHelper.GetCurrentUserId()!.Value;
             client.IsActive = true;
 
+            string rootFolderName = Enum.GetName(typeof(CompanyType), client.CompanyType) ?? "Unknown";
+            string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, "", client.Name);
+
+            client.GoogleDriveId = clientFolderId;
+
             await _clientRepository.AddAsync(client);
 
             List<string> projectType = new List<string>()
@@ -70,11 +75,7 @@ namespace AuditPilot.API.Controllers
             foreach (var type in projectType)
             {
                 //string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLable ? "PrivateLabel" : "PublicLabel";
-                string rootFolderName = Enum.GetName(typeof(CompanyType), client.CompanyType) ?? "Unknown";
-
                 string projectTypeFolderName = type;
-
-                string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, projectTypeFolderName, client.Name);
                 var projectFolder = await _googleDriveHelper.CreateFolderAsync(type, clientFolderId);
 
                 ClientProjectdto projectDto = new ClientProjectdto()
@@ -135,7 +136,7 @@ namespace AuditPilot.API.Controllers
                 {
                     try
                     {
-                        string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLable
+                        string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLabel
                             ? "PrivateLabel"
                             : "PublicLabel";
                         string projectTypeFolderName = type.ToString();
@@ -185,10 +186,13 @@ namespace AuditPilot.API.Controllers
 
             foreach (var clientDto in clientDtos)
             {
+                var size = await GetFolderSize(clientDto.GoogleDriveId);
+                clientDto.FolderSize = size;
+
                 if (clientDto.CreatedBy != Guid.Empty)
                 {
                     var user = await _userManager.FindByIdAsync(clientDto.CreatedBy.ToString());
-                    clientDto.CreatedByUserName = user?.UserName ?? "Unknown"; 
+                    clientDto.CreatedByUserName = user?.UserName ?? "Unknown";
                 }
                 else
                 {
@@ -249,7 +253,7 @@ namespace AuditPilot.API.Controllers
             if (client == null)
                 return NotFound("Client not found.");
 
-            string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLable ? "PrivateLabel" : "PublicLabel";
+            string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLabel ? "PrivateLabel" : "PublicLabel";
             string projectTypeFolderName = projectDto.ProjectType == ProjectType.Tax ? "Tax" : "Audit";
 
             string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, projectTypeFolderName, client.Name);
@@ -444,7 +448,7 @@ namespace AuditPilot.API.Controllers
 
                 // Update the client fields
                 existingClient.Name = clientDto.Name;
-                existingClient.CompanyType = (int)clientDto.CompanyType <= 0 ? (int)CompanyType.Others: (int)clientDto.CompanyType;
+                existingClient.CompanyType = (int)clientDto.CompanyType <= 0 ? (int)CompanyType.Others : (int)clientDto.CompanyType;
                 //existingClient.Updat = DateTime.UtcNow;
                 //existingClient.UpdatedBy = SessionHelper.GetCurrentUserId()!.Value;
 
@@ -490,28 +494,45 @@ namespace AuditPilot.API.Controllers
 
             try
             {
-                // Get all items in the folder
-                var googleItems = await _googleDriveHelper.GetAllItemsInFolderAsync(folderId);
-
-                // Calculate total size of files (exclude folders)
-                long totalSize = 0;
-                foreach (var item in googleItems)
-                {
-                    // Skip folders (identified by MimeType)
-                    if (item.MimeType == "application/vnd.google-apps.folder")
-                        continue;
-
-                    // Add file size (handle null Size)
-                    totalSize += item.Size ?? 0;
-                }
-
-                // Return the total size in bytes
+                long totalSize = await CalculateFolderSizeAsync(folderId);
                 return FormatFileSize(totalSize);
             }
             catch (Exception ex)
             {
                 return "0KB";
             }
+        }
+
+        private async Task<long> CalculateFolderSizeAsync(string folderId)
+        {
+            long totalSize = 0;
+
+            try
+            {
+                // Get all items in the folder
+                var googleItems = await _googleDriveHelper.GetAllItemsInFolderAsync(folderId);
+
+                foreach (var item in googleItems)
+                {
+                    if (item.MimeType == "application/vnd.google-apps.folder")
+                    {
+                        // Recursively calculate size of subfolder
+                        totalSize += await CalculateFolderSizeAsync(item.Id);
+                    }
+                    else
+                    {
+                        // Add file size (handle null Size)
+                        totalSize += item.Size ?? 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error for debugging but don't throw; return 0 for this folder
+                Console.WriteLine($"Error calculating size for folder {folderId}: {ex.Message}");
+            }
+
+            return totalSize;
         }
         private string FormatFileSize(long bytes)
         {

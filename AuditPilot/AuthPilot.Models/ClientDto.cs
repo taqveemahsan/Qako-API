@@ -32,5 +32,6 @@ namespace AuthPilot.Models
         public Guid ModifiedBy { get; set; }
         public DateTime ModifiedOn { get; set; }
         public bool IsActive { get; set; }
+        public string GoogleDriveId { get; set; } = "";
     }
 }

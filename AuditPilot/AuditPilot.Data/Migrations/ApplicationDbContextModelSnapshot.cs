@@ -169,6 +169,10 @@ namespace AuditPilot.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("GoogleDriveId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -395,55 +399,55 @@ namespace AuditPilot.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "138de465-d866-4232-8050-cd81d8811659",
+                            Id = "c020f8ab-afb7-4105-83b6-81fbe02fe7b7",
                             Name = "Partner",
                             NormalizedName = "PARTNER"
                         },
                         new
                         {
-                            Id = "23b9bc42-50af-4ab9-aae0-d1a19de6ba08",
+                            Id = "b1e208fb-fa66-48c5-bcbd-7adfa8330633",
                             Name = "AuditManager",
                             NormalizedName = "AUDITMANAGER"
                         },
                         new
                         {
-                            Id = "ad0c0b53-cac5-4906-894b-54b6e85af872",
+                            Id = "47667b89-e385-4595-a026-a0d5b546f45c",
                             Name = "TaxManager",
                             NormalizedName = "TAXMANAGER"
                         },
                         new
                         {
-                            Id = "1eb66f4c-0b97-4a3c-aa67-e060505d7b14",
+                            Id = "64da3ebf-43be-4b3c-83b6-4fb1a9d0540d",
                             Name = "CorporateManager",
                             NormalizedName = "CORPORATEMANAGER"
                         },
                         new
                         {
-                            Id = "8c093595-c3e3-45db-bf54-dd2cbf9585d7",
+                            Id = "0eb57ccc-1bc6-4024-80de-8c3b57bf079b",
                             Name = "AdvisoryManager",
                             NormalizedName = "ADVISORYMANAGER"
                         },
                         new
                         {
-                            Id = "51eefc44-27fd-4445-8676-24164ced866e",
+                            Id = "b35fb289-60f6-4ef1-a39c-ac285da12240",
                             Name = "ERPManager",
                             NormalizedName = "ERPMANAGER"
                         },
                         new
                         {
-                            Id = "e36cc4f7-330c-4dc8-b473-0a9abc5c30ea",
+                            Id = "8cc3db23-6692-4219-8ee4-9ab29f08eb98",
                             Name = "BookkeepingManager",
                             NormalizedName = "BOOKKEEPINGMANAGER"
                         },
                         new
                         {
-                            Id = "c3d56f94-0186-4b65-a9f1-9a9d0d13d75b",
+                            Id = "e7bbc027-47ea-41c2-8ced-51d5fe71f320",
                             Name = "OtherManager",
                             NormalizedName = "OTHERMANAGER"
                         },
                         new
                         {
-                            Id = "da2258f2-5441-4874-911e-85180e3f1a26",
+                            Id = "2f6f2780-1c0c-4792-994b-c21f6ca34048",
                             Name = "User",
                             NormalizedName = "USER"
                         });

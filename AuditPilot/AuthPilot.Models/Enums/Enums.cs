@@ -8,8 +8,8 @@ namespace AuthPilot.Models.Enums
 {
     public enum CompanyType
     {
-        PrivateLable= 1,
-        PublicComp=2,
+        PrivateLabel= 1,
+        PublicLabel=2,
         ForeignCompanies=3,
         PartnershipFirms=4,
         NonProfitOrganizations = 5,
