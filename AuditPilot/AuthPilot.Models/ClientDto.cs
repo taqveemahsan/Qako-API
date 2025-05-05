@@ -23,6 +23,7 @@ namespace AuthPilot.Models
         public string Name { get; set; }
         public CompanyType CompanyType { get; set; }
         public string Email { get; set; }
+        public string FolderSize { get; set; }
         public string Phone { get; set; }
         public string Address { get; set; }
         public DateTime CreatedOn { get; set; }

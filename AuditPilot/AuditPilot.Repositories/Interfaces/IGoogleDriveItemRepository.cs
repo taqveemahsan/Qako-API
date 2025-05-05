@@ -10,5 +10,8 @@ namespace AuditPilot.Repositories.Interfaces
     public interface IGoogleDriveItemRepository
     {
         Task<Guid> AddAsync(GoogleDriveItem item);
+        Task<List<GoogleDriveItem>> GetByGoogleIdsAsync(List<string> googleIds);
+        Task<GoogleDriveItem> GetByGoogleIdAsync(string googleId);
+        Task UpdateAsync(GoogleDriveItem item);
     }
 }

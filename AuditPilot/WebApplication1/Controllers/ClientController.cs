@@ -436,7 +436,6 @@ namespace AuditPilot.API.Controllers
                     return NotFound("Client not found.");
                 }
 
-                // Check for duplicate name (excluding the current client)
                 var duplicateClient = await _clientRepository.GetByNameAsync(clientDto.Name.Trim());
                 if (duplicateClient != null && duplicateClient.Id != clientDto.Id)
                 {
@@ -481,6 +480,52 @@ namespace AuditPilot.API.Controllers
             {
                 return StatusCode(500, new { message = $"Failed to fetch folder structure: {ex.Message}" });
             }
+        }
+
+
+        private async Task<string> GetFolderSize(string folderId)
+        {
+            if (string.IsNullOrEmpty(folderId))
+                return "0KB";
+
+            try
+            {
+                // Get all items in the folder
+                var googleItems = await _googleDriveHelper.GetAllItemsInFolderAsync(folderId);
+
+                // Calculate total size of files (exclude folders)
+                long totalSize = 0;
+                foreach (var item in googleItems)
+                {
+                    // Skip folders (identified by MimeType)
+                    if (item.MimeType == "application/vnd.google-apps.folder")
+                        continue;
+
+                    // Add file size (handle null Size)
+                    totalSize += item.Size ?? 0;
+                }
+
+                // Return the total size in bytes
+                return FormatFileSize(totalSize);
+            }
+            catch (Exception ex)
+            {
+                return "0KB";
+            }
+        }
+        private string FormatFileSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double size = bytes;
+            int order = 0;
+
+            while (size >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                size /= 1024;
+            }
+
+            return $"{size:0.##} {sizes[order]}";
         }
     }
 }

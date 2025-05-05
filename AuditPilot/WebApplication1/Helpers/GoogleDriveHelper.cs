@@ -134,5 +134,44 @@ namespace AuditPilot.API.Helpers
             return result.Files.FirstOrDefault();
         }
 
+        public async Task<Google.Apis.Drive.v3.Data.File> GetItemAsync(string itemId)
+        {
+            try
+            {
+                var request = _driveService.Files.Get(itemId);
+                request.Fields = "id,name,mimeType,parents";
+                var item = await request.ExecuteAsync();
+                return item;
+            }
+            catch (Google.GoogleApiException ex)
+            {
+                throw new Exception($"Failed to get item: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<Google.Apis.Drive.v3.Data.File> RenameItemAsync(string itemId, string newName)
+        {
+            try
+            {
+                var fileUpdate = new Google.Apis.Drive.v3.Data.File
+                {
+                    Name = newName
+                };
+
+                var request = _driveService.Files.Update(fileUpdate, itemId);
+                request.Fields = "id,name,mimeType";
+                var updatedFile = await request.ExecuteAsync();
+                return updatedFile;
+            }
+            catch (Google.GoogleApiException ex)
+            {
+                throw; // Propagate API errors to be handled by the controller
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to rename item: {ex.Message}", ex);
+            }
+        }
+
     }
 }
