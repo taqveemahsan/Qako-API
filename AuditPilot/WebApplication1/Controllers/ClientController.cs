@@ -548,5 +548,17 @@ namespace AuditPilot.API.Controllers
 
             return $"{size:0.##} {sizes[order]}";
         }
+
+        // New endpoint for version check
+        [HttpGet("check-update")]
+        [AllowAnonymous] // Public access for update check, remove if auth needed
+        public IActionResult CheckUpdate()
+        {
+            return Ok(new
+            {
+                version = "1.0.2",
+                downloadUrl = "https://test.ibt-learning.com/updates/QACORDMS.Client.exe"
+            });
+        }
     }
 }
