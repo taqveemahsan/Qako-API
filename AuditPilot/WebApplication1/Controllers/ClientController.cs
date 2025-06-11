@@ -136,9 +136,11 @@ namespace AuditPilot.API.Controllers
                 {
                     try
                     {
-                        string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLabel
-                            ? "PrivateLabel"
-                            : "PublicLabel";
+                        //string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLabel
+                        //    ? "PrivateLabel"
+                        //    : "PublicLabel";
+                        string rootFolderName = client.CompanyType.ToString();
+
                         string projectTypeFolderName = type.ToString();
 
                         string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, projectTypeFolderName, client.Name);
