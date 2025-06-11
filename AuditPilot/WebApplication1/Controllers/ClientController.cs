@@ -55,8 +55,50 @@ namespace AuditPilot.API.Controllers
             client.CreatedBy = SessionHelper.GetCurrentUserId()!.Value;
             client.IsActive = true;
 
-            string rootFolderName = Enum.GetName(typeof(CompanyType), client.CompanyType) ?? "Unknown";
-            string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, "", client.Name);
+            //string rootFolderName = Enum.GetName(typeof(CompanyType), client.CompanyType) ?? "Unknown";
+            string rootFolderName = "";
+            if (client.CompanyType == (int)CompanyType.PrivateLabel)
+            {
+                rootFolderName = "0ALQxrWfvwmvIUk9PVA";
+            }
+            else if (client.CompanyType == (int)CompanyType.PublicLabel)
+            {
+                rootFolderName = "0ADC2VfFXy_yfUk9PVA";
+            }
+            else if (client.CompanyType == (int)CompanyType.ForeignCompanies)
+            {
+                rootFolderName = "0AHJFqZfnHt7EUk9PVA";
+            }
+            else if (client.CompanyType == (int)CompanyType.PartnershipFirms)
+            {
+                rootFolderName = "0ANs4B1FxX06pUk9PVA";
+            }
+            else if (client.CompanyType == (int)CompanyType.NonProfitOrganizations)
+            {
+                rootFolderName = "0AHHwae92NeoyUk9PVA";
+            }
+            else if (client.CompanyType == (int)CompanyType.NBFC)
+            {
+                rootFolderName = "0AKeq0fS2ho6oUk9PVA";
+
+            }
+            else if (client.CompanyType == (int)CompanyType.PICS)
+            {
+                rootFolderName = "0AAWlYFMfyJjtUk9PVA";
+            }
+            else if (client.CompanyType == (int)CompanyType.ProvidentGratuityFunds)
+            {
+                rootFolderName = "0AM8UPlKBs3zBUk9PVA";
+            }
+            else if (client.CompanyType == (int)CompanyType.IndividualsSoleProprietors)
+            {
+                rootFolderName = "0AJMd-HAIvRi_Uk9PVA";
+            }
+            else if (client.CompanyType == (int)CompanyType.Others)
+            {
+                rootFolderName = "0AO7esd_zDlE5Uk9PVA";
+            }
+            string clientFolderId = await EnsureFolderStructureV1Async(rootFolderName, "", client.Name);
 
             client.GoogleDriveId = clientFolderId;
 
@@ -403,6 +445,39 @@ namespace AuditPilot.API.Controllers
                 await _folderStructureRepository.AddFolderAsync(rootFolderName, null, rootFolderId);
             }
 
+            string clientFolderId = await _folderStructureRepository.GetFolderIdAsync(clientName, rootFolderId);
+            if (string.IsNullOrEmpty(clientFolderId))
+            {
+                var clientFolder = await _googleDriveHelper.GetOrCreateFolderAsync(clientName, rootFolderId);
+                clientFolderId = clientFolder.Id;
+
+                await _folderStructureRepository.AddFolderAsync(clientName, rootFolderId, clientFolderId);
+            }
+
+            string projectTypeFolderId = await _folderStructureRepository.GetFolderIdAsync(projectTypeFolderName, clientFolderId);
+            if (string.IsNullOrEmpty(projectTypeFolderId))
+            {
+                var projectTypeFolder = await _googleDriveHelper.GetOrCreateFolderAsync(projectTypeFolderName, clientFolderId);
+                projectTypeFolderId = projectTypeFolder.Id;
+
+                await _folderStructureRepository.AddFolderAsync(projectTypeFolderName, clientFolderId, projectTypeFolderId);
+            }
+
+            return projectTypeFolderId;
+        }
+        private async Task<string> EnsureFolderStructureV1Async(string rootFolderName, string projectTypeFolderName, string clientName)
+        {
+            //string rootFolderId = await _folderStructureRepository.GetFolderIdAsync(rootFolderName, null);
+            //if (string.IsNullOrEmpty(rootFolderId))
+            //{
+            //    var rootFolder = await _googleDriveHelper.GetOrCreateFolderAsync(rootFolderName, _configuration["RootFolderId"]);
+            //    rootFolderId = rootFolder.Id;
+
+            //    await _folderStructureRepository.AddFolderAsync(rootFolderName, null, rootFolderId);
+            //}
+
+            string rootFolderId = rootFolderName;
+            //string rootFolderId = "0AHJFqZfnHt7EUk9PVA";
             string clientFolderId = await _folderStructureRepository.GetFolderIdAsync(clientName, rootFolderId);
             if (string.IsNullOrEmpty(clientFolderId))
             {
