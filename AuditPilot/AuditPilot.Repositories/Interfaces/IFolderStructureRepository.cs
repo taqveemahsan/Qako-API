@@ -13,5 +13,6 @@ namespace AuditPilot.Repositories.Interfaces
         Task AddFolderAsync(string folderName, string parentFolderId, string googleDriveFolderId);
         Task<List<FolderStructureDto>> GetFolderStructureListAsync(string search = "", int page = 1, int pageSize = 10);
         Task<int> GetFolderStructureCountAsync(string search = "");
+        Task UpdateFolderNameByGoogleDriveIdAsync(string googleDriveFolderId, string newFolderName);
     }
 }

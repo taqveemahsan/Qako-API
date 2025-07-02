@@ -98,5 +98,15 @@ namespace AuditPilot.Repositories
 
             return await query.CountAsync();
         }
+
+        public async Task UpdateFolderNameByGoogleDriveIdAsync(string googleDriveFolderId, string newFolderName)
+        {
+            var folder = await _context.FolderStructures.FirstOrDefaultAsync(f => f.GoogleDriveFolderId == googleDriveFolderId && f.IsActive);
+            if (folder != null)
+            {
+                folder.FolderName = newFolderName;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

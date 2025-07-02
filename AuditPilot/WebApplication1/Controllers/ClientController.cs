@@ -55,11 +55,32 @@ namespace AuditPilot.API.Controllers
             client.CreatedBy = SessionHelper.GetCurrentUserId()!.Value;
             client.IsActive = true;
 
-            string rootFolderName = Enum.GetName(typeof(CompanyType), client.CompanyType) ?? "Unknown";
-            string clientFolderId = await EnsureFolderStructureAsync(rootFolderName, "", client.Name);
+            string[] companyTypes = new string[]
+            {
+                "Private Ltd Companies", "Public Ltd Companies", "Foreign Companies", "Partnership Firms",
+                "Non Profit Organizations", "NBFC", "PICS", "Provident & Gratuity Funds",
+                "Individuals/Sole Proprietors", "Others"
+            };
+            string rootFolderName = client.CompanyType >= 0 && client.CompanyType < companyTypes.Length ? companyTypes[client.CompanyType] : "Unknown";
+
+            // Create or get the root and client folders only
+            string rootFolderId = await _folderStructureRepository.GetFolderIdAsync(rootFolderName, null);
+            if (string.IsNullOrEmpty(rootFolderId))
+            {
+                var rootFolder = await _googleDriveHelper.GetOrCreateFolderAsync(rootFolderName, _configuration["RootFolderId"]);
+                rootFolderId = rootFolder.Id;
+                await _folderStructureRepository.AddFolderAsync(rootFolderName, null, rootFolderId);
+            }
+
+            string clientFolderId = await _folderStructureRepository.GetFolderIdAsync(client.Name, rootFolderId);
+            if (string.IsNullOrEmpty(clientFolderId))
+            {
+                var clientFolder = await _googleDriveHelper.GetOrCreateFolderAsync(client.Name, rootFolderId);
+                clientFolderId = clientFolder.Id;
+                await _folderStructureRepository.AddFolderAsync(client.Name, rootFolderId, clientFolderId);
+            }
 
             client.GoogleDriveId = clientFolderId;
-
             await _clientRepository.AddAsync(client);
 
             List<string> projectType = new List<string>()
@@ -71,11 +92,9 @@ namespace AuditPilot.API.Controllers
                 "ERP",
                 "Bookkeeping"
             };
-            // Create Projects
+            // Create Projects (folders directly under client folder)
             foreach (var type in projectType)
             {
-                //string rootFolderName = client.CompanyType == (int)CompanyType.PrivateLable ? "PrivateLabel" : "PublicLabel";
-                string projectTypeFolderName = type;
                 var projectFolder = await _googleDriveHelper.CreateFolderAsync(type, clientFolderId);
 
                 ClientProjectdto projectDto = new ClientProjectdto()
@@ -188,8 +207,8 @@ namespace AuditPilot.API.Controllers
 
             foreach (var clientDto in clientDtos)
             {
-                var size = await GetFolderSize(clientDto.GoogleDriveId);
-                clientDto.FolderSize = size;
+                //var size = await GetFolderSize(clientDto.GoogleDriveId);
+                //clientDto.FolderSize = size;
 
                 if (clientDto.CreatedBy != Guid.Empty)
                 {
@@ -231,10 +250,9 @@ namespace AuditPilot.API.Controllers
         //    return Ok(response);
         //}
 
-        [HttpDelete("{id}")]
+        [HttpPost("delete/{id}")]
         public async Task<IActionResult> DeleteClient(Guid id)
         {
-            //var userId = SessionHelper.GetCurrentUserId()!.Value;
             var client = await _clientRepository.GetByIdAsync(id);
             if (client == null)
             {
@@ -244,6 +262,7 @@ namespace AuditPilot.API.Controllers
             await _clientRepository.DeleteAsync(client);
             return Ok(new { Message = "Client deleted successfully." });
         }
+
 
         [HttpPost("create-project")]
         public async Task<IActionResult> CreateClientProject([FromBody] ClientProjectdto projectDto)
@@ -448,10 +467,29 @@ namespace AuditPilot.API.Controllers
                     return BadRequest(new { message = "A client with this name already exists." });
                 }
 
+                // If the name has changed, update Google Drive and FolderStructure
+                if (!string.Equals(existingClient.Name, clientDto.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Rename folder in Google Drive
+                    if (!string.IsNullOrEmpty(existingClient.GoogleDriveId))
+                    {
+                        try
+                        {
+                            await _googleDriveHelper.RenameItemAsync(existingClient.GoogleDriveId, clientDto.Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Optionally log error, but continue to update DB
+                            Console.WriteLine($"Failed to rename Google Drive folder: {ex.Message}");
+                        }
+                        // Update folder name in FolderStructure table
+                        await _folderStructureRepository.UpdateFolderNameByGoogleDriveIdAsync(existingClient.GoogleDriveId, clientDto.Name);
+                    }
+                }
+
                 // Update the client fields
                 existingClient.Name = clientDto.Name;
-                existingClient.CompanyType = (int)clientDto.CompanyType <= 0 ? (int)CompanyType.Others : (int)clientDto.CompanyType;
-                //existingClient.Updat = DateTime.UtcNow;
+                //existingClient.CompanyType = (int)clientDto.CompanyType <= 0 ? (int)CompanyType.Others : (int)clientDto.CompanyType;
                 //existingClient.UpdatedBy = SessionHelper.GetCurrentUserId()!.Value;
 
                 await _clientRepository.UpdateAsync(existingClient);
@@ -558,7 +596,7 @@ namespace AuditPilot.API.Controllers
         {
             return Ok(new
             {
-                version = "1.0.2",
+                version = "1.0.4",
                 downloadUrl = "https://test.ibt-learning.com/updates/QACORDMS.Client.exe"
             });
         }
