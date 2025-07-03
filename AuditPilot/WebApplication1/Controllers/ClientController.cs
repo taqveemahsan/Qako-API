@@ -259,6 +259,20 @@ namespace AuditPilot.API.Controllers
                 return NotFound(new { Message = "Client not found." });
             }
 
+            // Delete the folder from Google Drive if it exists
+            if (!string.IsNullOrEmpty(client.GoogleDriveId))
+            {
+                try
+                {
+                    await _googleDriveHelper.DeleteItemAsync(client.GoogleDriveId);
+                }
+                catch (Exception ex)
+                {
+                    // Optionally log error, but continue to delete from DB
+                    Console.WriteLine($"Failed to delete Google Drive folder: {ex.Message}");
+                }
+            }
+
             await _clientRepository.DeleteAsync(client);
             return Ok(new { Message = "Client deleted successfully." });
         }
@@ -596,7 +610,7 @@ namespace AuditPilot.API.Controllers
         {
             return Ok(new
             {
-                version = "1.0.4",
+                version = "1.0.5",
                 downloadUrl = "https://test.ibt-learning.com/updates/QACORDMS.Client.exe"
             });
         }

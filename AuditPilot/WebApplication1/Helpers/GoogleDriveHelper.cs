@@ -173,5 +173,18 @@ namespace AuditPilot.API.Helpers
             }
         }
 
+        public async Task DeleteItemAsync(string itemId)
+        {
+            try
+            {
+                var request = _driveService.Files.Delete(itemId);
+                await request.ExecuteAsync();
+            }
+            catch (Google.GoogleApiException ex)
+            {
+                throw new Exception($"Failed to delete item: {ex.Message}", ex);
+            }
+        }
+
     }
 }
