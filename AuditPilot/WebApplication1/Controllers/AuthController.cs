@@ -419,10 +419,9 @@ namespace AuditPilot.API.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.UserId) ||
-                string.IsNullOrWhiteSpace(request.CurrentPassword) ||
                 string.IsNullOrWhiteSpace(request.NewPassword))
             {
-                return BadRequest(new { Message = "All fields are required." });
+                return BadRequest(new { Message = "User ID and new password are required." });
             }
 
             var user = await _userManager.FindByIdAsync(request.UserId);
@@ -431,7 +430,8 @@ namespace AuditPilot.API.Controllers
                 return NotFound(new { Message = "User not found." });
             }
 
-            var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, request.NewPassword);
 
             if (!result.Succeeded)
             {
@@ -563,7 +563,6 @@ namespace AuditPilot.API.Controllers
     public class ChangePasswordRequest
     {
         public string UserId { get; set; }
-        public string CurrentPassword { get; set; }
         public string NewPassword { get; set; }
     }
 }

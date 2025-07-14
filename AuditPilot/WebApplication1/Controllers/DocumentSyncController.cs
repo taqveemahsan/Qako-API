@@ -416,6 +416,42 @@ namespace AuditPilot.API.Controllers
             }
         }
 
+        [HttpPost("delete-file/{fileId}")]
+        public async Task<IActionResult> DeleteFile(string fileId)
+        {
+            if (string.IsNullOrEmpty(fileId))
+                return BadRequest("File ID is required.");
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized("User ID claim not found.");
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            try
+            {
+                // Get the item from database
+                var dbItem = await _driveItemRepository.GetByGoogleIdAsync(fileId);
+                if (dbItem == null)
+                    return NotFound("File not found.");
+
+                // Delete from Google Drive
+                await _googleDriveHelper.DeleteItemAsync(fileId);
+
+                // Mark as inactive in database instead of hard delete
+                dbItem.IsActive = false;
+                dbItem.ModifiedBy = userId;
+                dbItem.ModifiedOn = DateTime.UtcNow;
+                await _driveItemRepository.UpdateAsync(dbItem);
+
+                return Ok(new { Message = "File deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         // Helper method to format file size (optional)
         private string FormatFileSize(long bytes)
         {
