@@ -610,7 +610,7 @@ namespace AuditPilot.API.Controllers
         {
             return Ok(new
             {
-                version = "1.0.9",
+                version = "1.0.10",
                 downloadUrl = "https://test.ibt-learning.com/updates/QACORDMS.Client.exe"
             });
         }

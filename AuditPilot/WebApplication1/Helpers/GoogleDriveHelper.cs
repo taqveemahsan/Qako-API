@@ -16,24 +16,43 @@ namespace AuditPilot.API.Helpers
 
         public async Task<Google.Apis.Drive.v3.Data.File> CreateFileAsync(string filePath, string folderId = null)
         {
+            var fileInfo = new FileInfo(filePath);
+            Console.WriteLine($"Uploading file: {filePath}, Size: {fileInfo.Length} bytes");
+
             var fileMetadata = new Google.Apis.Drive.v3.Data.File()
             {
                 Name = Path.GetFileName(filePath),
                 Parents = folderId != null ? new List<string> { folderId } : null
             };
 
-            using (var stream = new FileStream(filePath, FileMode.Open))
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             {
-                var request = _driveService.Files.Create(fileMetadata, stream, "application/octet-stream");
-                request.Fields = "id, name, mimeType";
-                var file = await request.UploadAsync();
-
-                if (file.Status != Google.Apis.Upload.UploadStatus.Completed)
+                var mimeType = GetMimeType(filePath);
+                var request = _driveService.Files.Create(fileMetadata, stream, mimeType);
+                request.Fields = "id, name, mimeType, size";
+                request.SupportsAllDrives = true;
+                
+                // Enable resumable upload for larger files
+                request.ChunkSize = 1024 * 1024; // 1MB chunks
+                
+                try
                 {
-                    throw new Exception("File upload failed.");
-                }
+                    var uploadResult = await request.UploadAsync();
+                    
+                    if (uploadResult.Status != Google.Apis.Upload.UploadStatus.Completed)
+                    {
+                        var errorMsg = uploadResult.Exception?.Message ?? "Unknown upload error";
+                        throw new Exception($"Upload failed. Status: {uploadResult.Status}, Error: {errorMsg}");
+                    }
 
-                return request.ResponseBody;
+                    Console.WriteLine($"Upload successful. File ID: {request.ResponseBody.Id}");
+                    return request.ResponseBody;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Upload exception: {ex.Message}");
+                    throw new Exception($"Google Drive upload error: {ex.Message}", ex);
+                }
             }
         }
 
@@ -48,13 +67,14 @@ namespace AuditPilot.API.Helpers
 
             var request = _driveService.Files.Create(folderMetadata);
             request.Fields = "id, name, mimeType";
+            request.SupportsAllDrives = true;
+            
             var folder = await request.ExecuteAsync();
             return folder;
         }
 
         public async Task<IList<Google.Apis.Drive.v3.Data.File>> GetAllItemsInFolderAsync(string folderId)
         {
-
             var request = _driveService.Files.List();
             request.Q = $"parents in '{folderId}'";
             request.Fields = "files(contentHints/thumbnail,fileExtension,iconLink,id,name,size,thumbnailLink,webContentLink,webViewLink,mimeType,parents)";
@@ -63,7 +83,6 @@ namespace AuditPilot.API.Helpers
             request.IncludeItemsFromAllDrives = true;
 
             var result = await request.ExecuteAsync();
-
             return result.Files;
         }
 

@@ -55,6 +55,9 @@ namespace AuditPilot.API.Controllers
 
             try
             {
+                // Add logging to debug the issue
+                Console.WriteLine($"Uploading file: {file.FileName}, Size: {file.Length}, ParentFolderId: {ParentFolderId}");
+                
                 var uploadedFile = await _googleDriveHelper.CreateFileAsync(tempFilePath, ParentFolderId);
 
                 var driveItem = new GoogleDriveItem
@@ -76,11 +79,16 @@ namespace AuditPilot.API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Upload error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
             finally
             {
-                System.IO.File.Delete(tempFilePath);
+                if (System.IO.File.Exists(tempFilePath))
+                {
+                    System.IO.File.Delete(tempFilePath);
+                }
             }
         }
 
