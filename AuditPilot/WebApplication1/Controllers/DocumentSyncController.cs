@@ -282,6 +282,7 @@ namespace AuditPilot.API.Controllers
 
             return File(fileBytes, "application/octet-stream", fileName);
         }
+
         [HttpPost("replace-file")]
         public async Task<IActionResult> ReplaceFile([FromForm] string fileId, [FromForm] IFormFile newFile)
         {
@@ -291,24 +292,20 @@ namespace AuditPilot.API.Controllers
             if (newFile == null || newFile.Length == 0)
                 return BadRequest("No file uploaded.");
 
-            // Create a temp file with the original file name (preserving extension)
+            // Check if file exists on Google Drive
+            var file = await _googleDriveHelper.FileExistsAsync(fileId);
+            if (file == false)
+                return NotFound("File not found or not accessible for update.");
+
             var tempFilePath = Path.Combine(Path.GetTempPath(), newFile.FileName);
 
             try
             {
-                // Ensure temp file doesn't already exist
-                //if (File.Exists(tempFilePath))
-                //{
-                //    File.Delete(tempFilePath);
-                //} 
-
-                // Save the IFormFile content to the temp file
                 using (var stream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write))
                 {
                     await newFile.CopyToAsync(stream);
                 }
 
-                // Replace the file on Google Drive using the temp file path
                 var updatedFileId = await _googleDriveHelper.ReplaceFileAsync(fileId, tempFilePath);
 
                 return Ok(new { FileId = updatedFileId });
@@ -319,19 +316,10 @@ namespace AuditPilot.API.Controllers
             }
             finally
             {
-                Console.WriteLine($"Failed to delete temp file {tempFilePath}:");
-                //// Clean up the temp file
-                //if (File.Exists(tempFilePath))
-                //{
-                //    try
-                //    {
-                //        File.Delete(tempFilePath);
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        Console.WriteLine($"Failed to delete temp file {tempFilePath}: {ex.Message}");
-                //    }
-                //}
+                if (System.IO.File.Exists(tempFilePath))
+                {
+                    System.IO.File.Delete(tempFilePath);
+                }
             }
         }
 
@@ -438,10 +426,15 @@ namespace AuditPilot.API.Controllers
 
             try
             {
+                // Check if file exists on Google Drive
+                var fileExists = await _googleDriveHelper.FileExistsAsync(fileId);
+                if (!fileExists)
+                    return NotFound("File not found on Google Drive.");
+
                 // Get the item from database
                 var dbItem = await _driveItemRepository.GetByGoogleIdAsync(fileId);
                 if (dbItem == null)
-                    return NotFound("File not found.");
+                    return NotFound("File not found in database.");
 
                 // Delete from Google Drive
                 await _googleDriveHelper.DeleteItemAsync(fileId);
@@ -475,39 +468,6 @@ namespace AuditPilot.API.Controllers
 
             return $"{size:0.##} {sizes[order]}";
         }
-        //[HttpPost("replace-file")]
-        //public async Task<IActionResult> ReplaceFile([FromForm] string fileId, [FromForm] IFormFile newFile)
-        //{
-        //    if (string.IsNullOrEmpty(fileId))
-        //        return BadRequest("File ID is required.");
-
-        //    if (newFile == null || newFile.Length == 0)
-        //        return BadRequest("No file uploaded.");
-
-        //    // Save the new file temporarily
-        //    var tempFilePath = Path.GetTempFileName();
-        //    using (var stream = new FileStream(tempFilePath, FileMode.Create))
-        //    {
-        //        await newFile.CopyToAsync(stream);
-        //    }
-
-        //    try
-        //    {
-        //        // Replace the file on Google Drive
-        //        var updatedFileId = await _googleDriveHelper.ReplaceFileAsync(fileId, tempFilePath);
-
-        //        // Delete the temporary file
-        //        System.IO.File.Delete(tempFilePath);
-
-        //        return Ok(new { FileId = updatedFileId });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Delete the temporary file in case of an error
-        //        System.IO.File.Delete(tempFilePath);
-        //        return StatusCode(500, $"Internal server error: {ex.Message}");
-        //    }
-        //}
     }
 
     public class RenameItemRequest

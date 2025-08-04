@@ -106,6 +106,7 @@ namespace AuditPilot.API.Helpers
             {
                 var request = _driveService.Files.Update(fileMetadata, fileId, stream, GetMimeType(newFilePath));
                 request.Fields = "id";
+                request.SupportsAllDrives = true; // Ensure support for Shared Drives
                 var result = await request.UploadAsync();
 
                 if (result.Status != Google.Apis.Upload.UploadStatus.Completed)
@@ -148,6 +149,7 @@ namespace AuditPilot.API.Helpers
             var request = _driveService.Files.List();
             request.Q = query;
             request.Fields = "files(id, name)";
+            request.SupportsAllDrives = true; // Add this line
             var result = await request.ExecuteAsync();
 
             return result.Files.FirstOrDefault();
@@ -159,6 +161,7 @@ namespace AuditPilot.API.Helpers
             {
                 var request = _driveService.Files.Get(itemId);
                 request.Fields = "id,name,mimeType,parents";
+                request.SupportsAllDrives = true; // Add this line
                 var item = await request.ExecuteAsync();
                 return item;
             }
@@ -179,6 +182,7 @@ namespace AuditPilot.API.Helpers
 
                 var request = _driveService.Files.Update(fileUpdate, itemId);
                 request.Fields = "id,name,mimeType";
+                request.SupportsAllDrives = true; // Add this line
                 var updatedFile = await request.ExecuteAsync();
                 return updatedFile;
             }
@@ -197,6 +201,7 @@ namespace AuditPilot.API.Helpers
             try
             {
                 var request = _driveService.Files.Delete(itemId);
+                request.SupportsAllDrives = true; // Ensure support for Shared Drives
                 await request.ExecuteAsync();
             }
             catch (Google.GoogleApiException ex)
@@ -205,5 +210,19 @@ namespace AuditPilot.API.Helpers
             }
         }
 
+        public async Task<bool> FileExistsAsync(string fileId)
+        {
+            try
+            {
+                var request = _driveService.Files.Get(fileId);
+                request.SupportsAllDrives = true; // <-- This is important!
+                var file = await request.ExecuteAsync();
+                return file != null;
+            }
+            catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return false;
+            }
+        }
     }
 }
