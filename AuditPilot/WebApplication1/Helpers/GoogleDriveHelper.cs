@@ -140,19 +140,49 @@ namespace AuditPilot.API.Helpers
             return await CreateFolderAsync(folderName, parentFolderId);
         }
 
+        //private async Task<Google.Apis.Drive.v3.Data.File> GetFolderByNameAsync(string folderName, string parentFolderId)
+        //{
+        //    var query = $"mimeType = 'application/vnd.google-apps.folder' and name = '{folderName}' and trashed = false";
+        //    if (!string.IsNullOrEmpty(parentFolderId))
+        //        query += $" and '{parentFolderId}' in parents";
+
+        //    var request = _driveService.Files.List();
+        //    request.Q = query;
+        //    request.Fields = "files(id, name)";
+        //    request.SupportsAllDrives = true; // Add this line
+        //    var result = await request.ExecuteAsync();
+
+        //    return result.Files.FirstOrDefault();
+        //}
         private async Task<Google.Apis.Drive.v3.Data.File> GetFolderByNameAsync(string folderName, string parentFolderId)
         {
-            var query = $"mimeType = 'application/vnd.google-apps.folder' and name = '{folderName}' and trashed = false";
-            if (!string.IsNullOrEmpty(parentFolderId))
-                query += $" and '{parentFolderId}' in parents";
+            try
+            {
+                var query = $"mimeType = 'application/vnd.google-apps.folder' and name = '{folderName}' and trashed = false";
+                if (!string.IsNullOrEmpty(parentFolderId))
+                {
+                    query += $" and parents = '{parentFolderId}'";  // Changed from 'in parents' to 'parents ='
+                }
 
-            var request = _driveService.Files.List();
-            request.Q = query;
-            request.Fields = "files(id, name)";
-            request.SupportsAllDrives = true; // Add this line
-            var result = await request.ExecuteAsync();
+                var request = _driveService.Files.List();
+                request.Q = query;
+                request.Fields = "files(id, name, parents)";
+                request.SupportsAllDrives = true;
+                var result = await request.ExecuteAsync();
 
-            return result.Files.FirstOrDefault();
+                // If parentFolderId is specified, ensure we only return folders that are direct children
+                if (!string.IsNullOrEmpty(parentFolderId))
+                {
+                    return result.Files.FirstOrDefault(f => f.Parents != null && f.Parents.Contains(parentFolderId));
+                }
+
+                return result.Files.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetFolderByNameAsync: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<Google.Apis.Drive.v3.Data.File> GetItemAsync(string itemId)
