@@ -154,6 +154,37 @@ namespace AuditPilot.API.Helpers
 
         //    return result.Files.FirstOrDefault();
         //}
+        //private async Task<Google.Apis.Drive.v3.Data.File> GetFolderByNameAsync(string folderName, string parentFolderId)
+        //{
+        //    try
+        //    {
+        //        var query = $"mimeType = 'application/vnd.google-apps.folder' and name = '{folderName}' and trashed = false";
+        //        if (!string.IsNullOrEmpty(parentFolderId))
+        //        {
+        //            query += $" and parents = '{parentFolderId}'";  // Changed from 'in parents' to 'parents ='
+        //        }
+
+        //        var request = _driveService.Files.List();
+        //        request.Q = query;
+        //        request.Fields = "files(id, name, parents)";
+        //        request.SupportsAllDrives = true;
+        //        var result = await request.ExecuteAsync();
+
+        //        // If parentFolderId is specified, ensure we only return folders that are direct children
+        //        if (!string.IsNullOrEmpty(parentFolderId))
+        //        {
+        //            return result.Files.FirstOrDefault(f => f.Parents != null && f.Parents.Contains(parentFolderId));
+        //        }
+
+        //        return result.Files.FirstOrDefault();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"Error in GetFolderByNameAsync: {ex.Message}");
+        //        return null;
+        //    }
+        //}
+
         private async Task<Google.Apis.Drive.v3.Data.File> GetFolderByNameAsync(string folderName, string parentFolderId)
         {
             try
@@ -161,20 +192,20 @@ namespace AuditPilot.API.Helpers
                 var query = $"mimeType = 'application/vnd.google-apps.folder' and name = '{folderName}' and trashed = false";
                 if (!string.IsNullOrEmpty(parentFolderId))
                 {
-                    query += $" and parents = '{parentFolderId}'";  // Changed from 'in parents' to 'parents ='
+                    // Correct syntax: use 'in parents' instead of 'parents ='
+                    query += $" and '{parentFolderId}' in parents";
                 }
 
                 var request = _driveService.Files.List();
                 request.Q = query;
                 request.Fields = "files(id, name, parents)";
                 request.SupportsAllDrives = true;
+                request.IncludeItemsFromAllDrives = true; // Add this line
+
                 var result = await request.ExecuteAsync();
 
-                // If parentFolderId is specified, ensure we only return folders that are direct children
-                if (!string.IsNullOrEmpty(parentFolderId))
-                {
-                    return result.Files.FirstOrDefault(f => f.Parents != null && f.Parents.Contains(parentFolderId));
-                }
+                Console.WriteLine($"Query executed: {query}");
+                Console.WriteLine($"Found {result.Files.Count} folders");
 
                 return result.Files.FirstOrDefault();
             }
