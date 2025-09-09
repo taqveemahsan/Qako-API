@@ -200,7 +200,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Audit Pilot", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Alam Aulakh", Version = "v1" });
 
     // Define the security scheme
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -263,7 +263,7 @@ app.UseCors("AllowAll");
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Audit Pilot v1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Alam Aulakh v1");
     });
 }
 
