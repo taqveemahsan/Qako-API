@@ -30,7 +30,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 
 builder.Services.AddSingleton(provider =>
 {
-    var credentialsPath = "C:\\google\\taqiproject-155860a26586.json";
+    //var credentialsPath = "C:\\google\\taqiproject-155860a26586.json";
+    var credentialsPath = "C:\\google\\alam.json";
 
     GoogleCredential credential;
     using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
